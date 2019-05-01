@@ -57,7 +57,7 @@ public void OnPluginStart()
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
-	RegConsoleCmd("sm_xfid", ShowID);
+	RegConsoleCmd("sm_xfid", Command_XFID);
 	
 	if (SQL_CheckConfig("xenforo"))
 	{
@@ -72,11 +72,11 @@ public void OnPluginStart()
 	CSetPrefix("{darkblue}[XenForo]{default}");
 }
 
-public Action ShowID(int client, int args)
+public Action Command_XFID(int client, int args)
 {
 	if (g_iUserID[client] > 0)
 	{
-		CReplyToCommand(client, "Your XenForo ID is %i.", g_iUserID[client]);
+		CReplyToCommand(client, "Your XenForo ID is %d.", g_iUserID[client]);
 	}
 	else
 	{

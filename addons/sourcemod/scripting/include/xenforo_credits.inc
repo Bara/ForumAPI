@@ -3,9 +3,9 @@
 #endif
 #define _xenforo_credits_included
 
-native int XenForo_GetUserCredits(int client);
-native bool XenForo_AddUserCredits(int client, int credits);
-native bool XenForo_RemoveUserCredits(int client, int credits);
+native int XenForo_GetClientCredits(int client);
+native bool XenForo_AddClientCredits(int client, int credits);
+native bool XenForo_RemoveClientCredits(int client, int credits);
 
 /*
  * If add is true, then the amount of credits was added.
@@ -29,8 +29,8 @@ public SharedPlugin __pl_xenforo_credits =
 #if !defined REQUIRE_PLUGIN
 public __pl_xenforo_credits_SetNTVOptional()
 {
-	MarkNativeAsOptional("XenForo_GetUserCredits");
-	MarkNativeAsOptional("XenForo_AddUserCredits");
-	MarkNativeAsOptional("XenForo_RemoveUserCredits");
+	MarkNativeAsOptional("XenForo_GetClientCredits");
+	MarkNativeAsOptional("XenForo_AddClientCredits");
+	MarkNativeAsOptional("XenForo_RemoveClientCredits");
 }
 #endif

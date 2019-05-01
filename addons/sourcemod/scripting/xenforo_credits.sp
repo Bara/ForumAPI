@@ -2,6 +2,7 @@
 #pragma newdecls required
 
 #include <sourcemod>
+#include <multicolors>
 #include <autoexecconfig>
 #include <xenforo_api>
 
@@ -19,9 +20,9 @@ char g_sColumn[64];
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	CreateNative("XenForo_GetUserCredits", Native_GetUserCredits);
-	CreateNative("XenForo_AddUserCredits", Native_AddUserCredits);
-	CreateNative("XenForo_RemoveUserCredits", Native_RemoveUserCredits);
+	CreateNative("XenForo_GetClientCredits", Native_GetClientCredits);
+	CreateNative("XenForo_AddClientCredits", Native_AddClientCredits);
+	CreateNative("XenForo_RemoveClientCredits", Native_RemoveClientCredits);
 
 	g_hOnCreditsUpdate = CreateGlobalForward("XF_OnCreditsUpdate", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	
@@ -41,7 +42,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	CreateTimer(30.0, Timer_GetAllUserCredits, _, TIMER_REPEAT);
+	CreateTimer(30.0, Timer_GetAllClientCredits, _, TIMER_REPEAT);
 
 	if (XenForo_IsConnected())
 	{
@@ -57,6 +58,10 @@ public void OnPluginStart()
 
 	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
 	g_cColumn.AddChangeHook(CVar_OnChange);
+
+	CSetPrefix("{darkblue}[XenForo]{default}");
+
+	RegConsoleCmd("sm_xfcredits", Command_XFCredits);
 }
 
 public void OnClientDisconnect(int client)
@@ -80,12 +85,25 @@ public void OnMapEnd()
 	}
 }
 
+public Action Command_XFCredits(int client, int args)
+{
+	if (XenForo_GetClientID(client) > 0)
+	{
+		CReplyToCommand(client, "You have %d Credits.", g_iCredits[client]);
+	}
+	else
+	{
+		CReplyToCommand(client, "You don't have a XenForo ID.");
+	}
+	return Plugin_Handled;
+}
+
 void ResetSettings(int client)
 {
 	g_iCredits[client] = -1;
 }
 
-public Action Timer_GetAllUserCredits(Handle timer)
+public Action Timer_GetAllClientCredits(Handle timer)
 {
 	LoopClients(i)
 	{
@@ -93,7 +111,7 @@ public Action Timer_GetAllUserCredits(Handle timer)
 		{
 			if (XenForo_GetClientID(i) > 0)
 			{
-				GetUserCredits(i);
+				GetClientCredits(i);
 			}
 		}
 	}
@@ -121,23 +139,23 @@ public void XF_OnConnected()
 {
 	g_dDB = XenForo_GetDatabase();
 
-	GetAllUserCredits();
+	GetAllClientCredits();
 }
 
-void GetAllUserCredits()
+void GetAllClientCredits()
 {
 	LoopClients(i)
 	{
-		GetUserCredits(i);
+		GetClientCredits(i);
 	}
 }
 
 public void XF_OnProcessed(int client)
 {
-	GetUserCredits(client);
+	GetClientCredits(client);
 }
 
-void GetUserCredits(int client)
+void GetClientCredits(int client)
 {
 	int iUserID = XenForo_GetClientID(client);
 	
@@ -145,15 +163,15 @@ void GetUserCredits(int client)
 	{
 		char sQuery[256];
 		Format(sQuery, sizeof(sQuery), "SELECT %s FROM xf_user WHERE user_id = %d;", g_sColumn, iUserID);
-		g_dDB.Query(SQL_GetUserCredits, sQuery, GetClientUserId(client));
+		g_dDB.Query(SQL_GetClientCredits, sQuery, GetClientUserId(client));
 	}
 }
 
-public void SQL_GetUserCredits(Database db, DBResultSet results, const char[] error, any data)
+public void SQL_GetClientCredits(Database db, DBResultSet results, const char[] error, any data)
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-Credits] (SQL_GetUserCredits) Fail at Query: %s", error);
+		SetFailState("[XenForo-Credits] (SQL_GetClientCredits) Fail at Query: %s", error);
 		delete results;
 		return;
 	}
@@ -171,6 +189,7 @@ public void SQL_GetUserCredits(Database db, DBResultSet results, const char[] er
 				Call_PushCell(true);
 				Call_PushCell(-1);
 				Call_PushCell(g_iCredits[client]);
+				Call_Finish();
 			}
 		}
 	}
@@ -178,7 +197,7 @@ public void SQL_GetUserCredits(Database db, DBResultSet results, const char[] er
 	delete results;
 }
 
-public int Native_GetUserCredits(Handle plugin, int numParams)
+public int Native_GetClientCredits(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 
@@ -197,7 +216,7 @@ public int Native_GetUserCredits(Handle plugin, int numParams)
 	return g_iCredits[client];
 }
 
-public int Native_AddUserCredits(Handle plugin, int numParams)
+public int Native_AddClientCredits(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 
@@ -225,7 +244,7 @@ public int Native_AddUserCredits(Handle plugin, int numParams)
 	return true;
 }
 
-public int Native_RemoveUserCredits(Handle plugin, int numParams)
+public int Native_RemoveClientCredits(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 
