@@ -51,7 +51,7 @@ public void OnPluginStart()
 
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
-	AutoExecConfig_SetFile("xenforo_api");
+	AutoExecConfig_SetFile("xenforo_credits");
 	g_cColumn = AutoExecConfig_CreateConVar("xenforo_credits_column", "dbtech_credits", "Name of the column for reading and writing the players credits.");
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
@@ -150,7 +150,7 @@ void GetAllClientCredits()
 	}
 }
 
-public void XF_OnProcessed(int client)
+public void XF_OnProcessed(int client, int xf_userid)
 {
 	GetClientCredits(client);
 }

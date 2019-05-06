@@ -11,13 +11,16 @@ ConVar g_cDebug = null;
 
 Database g_dDatabase;
 
-Handle g_hOnProcessed;
+Handle g_hOnGrabProcessed;
+Handle g_hOnInfoProcessed;
 Handle g_hOnConnected;
+
+char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
+int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
+ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
 
 bool g_bIsProcessed[MAXPLAYERS + 1];
 int g_iUserID[MAXPLAYERS + 1];
-
-bool g_bLateLoad;
 
 public Plugin myinfo = 
 {
@@ -31,17 +34,20 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("XenForo_GetClientID", Native_GrabClientID);
+	CreateNative("XenForo_GetClientName", Native_GrabClientName);
+	CreateNative("XenForo_GetClientPrimaryGroup", Native_GrabClientPrimaryGroup);
+	CreateNative("XenForo_GetClientSecondaryGroups", Native_GrabClientSecondaryGroups);
 	CreateNative("XenForo_IsProcessed", Native_IsProcessed);
 	CreateNative("XenForo_TExecute", Native_TExecute);
 	CreateNative("XenForo_IsConnected", Native_IsConnected);
 	CreateNative("XenForo_GetDatabase", Native_GetDatabase);
 	
-	g_hOnProcessed = CreateGlobalForward("XF_OnProcessed", ET_Ignore, Param_Cell);
+	g_hOnGrabProcessed = CreateGlobalForward("XF_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnInfoProcessed = CreateGlobalForward("XF_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
 	g_hOnConnected = CreateGlobalForward("XF_OnConnected", ET_Ignore);
 	
 	RegPluginLibrary("xenforo_api");
 	
-	g_bLateLoad = late;
 	return APLRes_Success;
 }
 
@@ -53,7 +59,7 @@ public void OnPluginStart()
 	AutoExecConfig_SetCreateFile(true);
 	AutoExecConfig_SetFile("xenforo_api");
 	g_cEnable = AutoExecConfig_CreateConVar("xenforo_api_status", "1", "Status of the plugin: (1 = on, 0 = off)", _, true, 0.0, true, 1.0);
-	g_cDebug = AutoExecConfig_CreateConVar("xenforo_api_debug", "0", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 0.0);
+	g_cDebug = AutoExecConfig_CreateConVar("xenforo_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
@@ -104,24 +110,17 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 		LogMessage("XenForo API has connected to SQL successfully.");
 	}
 	
-	if (g_bLateLoad)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		for (int i = 1; i <= MaxClients; i++)
+		if (IsClientConnected(i))
 		{
-			if (IsClientConnected(i))
-			{
-				OnClientConnected(i);
-			}
-			
-			if (IsClientAuthorized(i))
-			{
-				char sAuth[64];
-				GetClientAuthId(i, AuthId_Steam2, sAuth, sizeof(sAuth));
-				OnClientAuthorized(i, sAuth);
-			}
+			OnClientConnected(i);
 		}
 		
-		g_bLateLoad = false;
+		if (IsClientValid(i))
+		{
+			OnClientPostAdminCheck(i);
+		}
 	}
 }
 
@@ -129,11 +128,13 @@ public void OnClientConnected(int client)
 {
 	g_bIsProcessed[client] = false;
 	g_iUserID[client] = -1;
+	g_iPrimaryGroup[client] = -1;
+	delete g_aSecondaryGroups[client];
 }
 
-public void OnClientAuthorized(int client, const char[] sSteamID)
+public void OnClientPostAdminCheck(int client)
 {
-	if (!g_cEnable.BoolValue || IsFakeClient(client))
+	if (!g_cEnable.BoolValue || !IsClientValid(client))
 	{
 		return;
 	}
@@ -144,7 +145,7 @@ public void OnClientAuthorized(int client, const char[] sSteamID)
 	}
 	
 	char sCommunityID[64];
-	SteamIDToCommunityID(sSteamID, sCommunityID, sizeof(sCommunityID));
+	GetClientAuthId(client, AuthId_SteamID64, sCommunityID, sizeof(sCommunityID));
 	
 	char sQuery[256];
 	// For XenForo 1.5(?)
@@ -154,65 +155,128 @@ public void OnClientAuthorized(int client, const char[] sSteamID)
 	
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("SQL QUERY: OnClientAuthorized - Query: %s", sQuery);
+		LogMessage("SQL QUERY: OnClientPostAdminCheck - Query: %s", sQuery);
 	}
 }
 
-public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error, any data)
+public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error, int userid)
 {
-	int client = GetClientOfUserId(data);
-	
-	if (client == 0)
+	if(db == null || strlen(error) > 0)
 	{
+		SetFailState("[XenForo-API] (SQL_GrabUserID) Fail at Query: %s", error);
 		return;
-	}
-	
-	if (!IsClientConnected(client))
-	{
-		LogError("Error grabbing User Data: (Client is not Connected)");
-		return;
-	}
-	
-	if (!IsClientAuthorized(client))
-	{
-		LogError("Error grabbing User Data: (Client is not Authorized)");
-		return;
-	}
-	
-	if (g_cDebug.BoolValue)
-	{
-		LogMessage("Retrieving data for %N...", client);
-	}
-	
-	if (db == null)
-	{
-		LogError("SQL ERROR: Error grabbing User Data for '%N': '%s'", client, error);
-		return;
-	}
-	
-	if (results.FetchRow())
-	{
-		if (results.IsFieldNull(0))
-		{
-			LogError("Error retrieving User Data: (Field is null)");
-			return;
-		}
-		
-		g_iUserID[client] = results.FetchInt(0);
-		g_bIsProcessed[client] = true;
-		
-		Call_StartForward(g_hOnProcessed);
-		Call_PushCell(client);
-		Call_Finish();
-		
-		if (g_cDebug.BoolValue)
-		{
-			LogMessage("User '%N' has been processed successfully!", client);
-		}
 	}
 	else
 	{
-		LogError("Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+		int client = GetClientOfUserId(userid);
+		
+		if (client > 0 && !IsClientValid(client))
+		{
+			LogError("[XenForo-API] (SQL_GrabUserID) Error grabbing User Data: Client invalid");
+			return;
+		}
+		
+		if (g_cDebug.BoolValue)
+		{
+			LogMessage("Retrieving data for %N...", client);
+		}
+		
+		if (results.FetchRow())
+		{
+			if (results.IsFieldNull(0))
+			{
+				LogError("[XenForo-API] (SQL_GrabUserID) Error retrieving User Data: (Field is null)");
+				return;
+			}
+			
+			g_iUserID[client] = results.FetchInt(0);
+			g_bIsProcessed[client] = true;
+			
+			Call_StartForward(g_hOnGrabProcessed);
+			Call_PushCell(client);
+			Call_PushCell(g_iUserID[client]);
+			Call_Finish();
+			
+			if (g_cDebug.BoolValue)
+			{
+				LogMessage("User '%N' has been processed successfully!", client);
+			}
+
+			char sQuery[256];
+			Format(sQuery, sizeof(sQuery), "SELECT username, user_group_id, secondary_group_ids FROM xf_user WHERE user_id = '%d'", g_iUserID[client]);
+			g_dDatabase.Query(SQL_UserInformations, sQuery, userid);
+		}
+		else
+		{
+			LogError("[XenForo-API] (SQL_GrabUserID) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+		}
+	}
+}
+
+public void SQL_UserInformations(Database db, DBResultSet results, const char[] error, int userid)
+{
+	if(db == null || strlen(error) > 0)
+	{
+		SetFailState("[XenForo-API] (SQL_UserInformations) Fail at Query: %s", error);
+		return;
+	}
+	else
+	{
+		int client = GetClientOfUserId(userid);
+		
+		if (!IsClientValid(client))
+		{
+			LogError("[XenForo-API] (SQL_UserInformations) Error grabbing User informations: Client invalid");
+			return;
+		}
+		
+		if (g_cDebug.BoolValue)
+		{
+			LogMessage("Retrieving informations for %N...", client);
+		}
+		
+		if (results.FetchRow())
+		{
+			if (results.IsFieldNull(0))
+			{
+				LogError("[XenForo-API] (SQL_UserInformations) Error retrieving User informations: (Field is null)");
+				return;
+			}
+
+			results.FetchString(0, g_sName[client], sizeof(g_sName[]));
+
+			g_iPrimaryGroup[client] = results.FetchInt(1);
+
+			char sSecondaryIDs[64];
+			results.FetchString(2, sSecondaryIDs, sizeof(sSecondaryIDs));
+
+			char sSecondaryGroups[12][12];
+			int iSecondaryCount = ExplodeString(sSecondaryIDs, ",", sSecondaryGroups, sizeof(sSecondaryGroups), sizeof(sSecondaryGroups[]));
+
+			delete g_aSecondaryGroups[client];
+			g_aSecondaryGroups[client] = new ArrayList();
+
+			for (int i = 0; i < iSecondaryCount; i++)
+			{
+				g_aSecondaryGroups[client].Push(StringToInt(sSecondaryGroups[i]));
+			}
+			
+			Call_StartForward(g_hOnInfoProcessed);
+			Call_PushCell(client);
+			Call_PushString(g_sName[client]);
+			Call_PushCell(g_iPrimaryGroup[client]);
+			Call_PushCell(g_aSecondaryGroups[client]);
+			Call_Finish();
+			
+			if (g_cDebug.BoolValue)
+			{
+				LogMessage("User informations for'%N' has been processed successfully!", client);
+			}
+		}
+		else
+		{
+			LogError("[XenForo-API] (SQL_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+		}
 	}
 }
 
@@ -239,6 +303,44 @@ public int Native_GrabClientID(Handle plugin, int numParams)
 	}
 	
 	return -1;
+}
+
+public int Native_GrabClientPrimaryGroup(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	
+	if (g_bIsProcessed[client])
+	{
+		return g_iPrimaryGroup[client];
+	}
+	
+	return -1;
+}
+
+public int Native_GrabClientSecondaryGroups(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	
+	if (g_bIsProcessed[client] && g_aSecondaryGroups[client] != null)
+	{
+		ArrayList array = g_aSecondaryGroups[client];
+		return view_as<int>(array);
+	}
+	
+	return -1;
+}
+
+public int Native_GrabClientName(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	
+	if (g_bIsProcessed[client])
+	{
+		SetNativeString(2, g_sName[client], sizeof(g_sName[]));
+		return true;
+	}
+	
+	return false;
 }
 
 public int Native_IsProcessed(Handle plugin, int numParams)
@@ -279,4 +381,17 @@ public int Native_IsConnected(Handle plugin, int numParams)
 public int Native_GetDatabase(Handle plugin, int numParams)
 {
 	return view_as<int>(g_dDatabase);
+}
+
+stock bool IsClientValid(int client)
+{
+	if (client > 0 && client <= MaxClients)
+	{
+		if(IsClientInGame(client) && !IsFakeClient(client) && !IsClientSourceTV(client))
+		{
+			return true;
+		}
+	}
+	
+	return false;
 }

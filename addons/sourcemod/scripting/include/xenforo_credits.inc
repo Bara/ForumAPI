@@ -17,8 +17,8 @@ forward void XF_OnCreditsUpdate(int client, bool add, int credits, int newCredit
 
 public SharedPlugin __pl_xenforo_credits = 
 {
-	name = "xenforo_vip",
-	file = "xenforo_vip.smx",
+	name = "xenforo_credits",
+	file = "xenforo_credits.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1,
 #else
