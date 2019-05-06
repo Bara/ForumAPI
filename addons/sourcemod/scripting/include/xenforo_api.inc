@@ -101,7 +101,7 @@ forward void XF_OnProcessed(int client, int xf_userid);
  * @param client			client index
  * @param name				username in forum
  * @param primarygroup		primary group id
- * @param secondarygroups	secondary group id list as arraylist
+ * @param secondarygroups	secondary group id list as arraylist (Don't close this array)
  *
  * @noreturn
  **/
