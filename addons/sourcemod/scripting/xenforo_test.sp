@@ -55,20 +55,30 @@ public Action Command_XFTest(int client, int args)
     XenForo_GetClientName(client, sName);
     PrintToChat(client, "Your XF Name: %s", sName);
 
-    PrintToChat(client, "Your XF Primary Group: %d", XenForo_GetClientPrimaryGroup(client));
-
     ArrayList aArray = XenForo_GetClientSecondaryGroups(client);
 
     char sList[64];
+
+    StringMap smGroups = XenForo_GetGroupList();
+    StringMap smGroupbanner = XenForo_GetGroupBannerText();
+
+    char sGroup[64], sBanner[32], sKey[12];
+    IntToString(XenForo_GetClientPrimaryGroup(client), sKey, sizeof(sKey));
+    smGroups.GetString(sKey, sGroup, sizeof(sGroup));
+    smGroupbanner.GetString(sKey, sBanner, sizeof(sBanner));
+
+    PrintToChat(client, "Your XF Primary Group: %d (Name: %s, Banner: %s)", XenForo_GetClientPrimaryGroup(client), sGroup, sBanner);
 
     for (int i = 0; i < aArray.Length; i++)
     {
         Format(sList, sizeof(sList), "%d, %s", aArray.Get(i), sList);
 
-        PrintToChat(client, "Secondary Group added: %d", aArray.Get(i));
-    }
+        IntToString(aArray.Get(i), sKey, sizeof(sKey));
+        smGroups.GetString(sKey, sGroup, sizeof(sGroup));
+        smGroupbanner.GetString(sKey, sBanner, sizeof(sBanner));
 
-    delete aArray;
+        PrintToChat(client, "Secondary Group added: %d (Name: %s, Banner: %s)", aArray.Get(i), sGroup, sBanner);
+    }
 
     PrintToChat(client, "Your XF Secondary Groups: %s", sList);
     PrintToChat(client, "Your XF Credits: %d", XenForo_GetClientCredits(client));

@@ -19,6 +19,9 @@ char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
 int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
 ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
 
+StringMap g_smGroups = null;
+StringMap g_smGroupBanner = null;
+
 bool g_bIsProcessed[MAXPLAYERS + 1];
 int g_iUserID[MAXPLAYERS + 1];
 
@@ -41,7 +44,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("XenForo_TExecute", Native_TExecute);
 	CreateNative("XenForo_IsConnected", Native_IsConnected);
 	CreateNative("XenForo_GetDatabase", Native_GetDatabase);
-	
+	CreateNative("XenForo_GetGroupList", Native_GetGroupList);
+	CreateNative("XenForo_GetGroupBannerText", Native_GetGroupBannerText);
+
 	g_hOnGrabProcessed = CreateGlobalForward("XF_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
 	g_hOnInfoProcessed = CreateGlobalForward("XF_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
 	g_hOnConnected = CreateGlobalForward("XF_OnConnected", ET_Ignore);
@@ -95,8 +100,8 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 {
 	if (db == null)
 	{
-		LogError("SQL ERROR: Error connecting to database - '%s'", error);
-		SetFailState("Error connecting to \"xenforo\" database, please verify configurations & connections. (Check Error Logs)");
+		LogError("[XenForo-API] (OnSQLConnect) SQL ERROR: Error connecting to database - '%s'", error);
+		SetFailState("[XenForo-API] (OnSQLConnect) Error connecting to \"xenforo\" database, please verify configurations & connections. (Check Error Logs)");
 		return;
 	}
 	
@@ -104,6 +109,8 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 	
 	Call_StartForward(g_hOnConnected);
 	Call_Finish();
+
+	LoadXenForoGroups();
 	
 	if (g_cDebug.BoolValue)
 	{
@@ -293,6 +300,56 @@ void SQL_TQuery_XenForo(SQLQueryCallback callback, const char[] sQuery, any data
 	}
 }
 
+void LoadXenForoGroups()
+{
+	char sQuery[256];
+	Format(sQuery, sizeof(sQuery), "SELECT user_group_id, title, banner_text FROM xf_user_group");
+	g_dDatabase.Query(SQL_GetXenForoGroups, sQuery);
+}
+
+public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] error, any data)
+{
+	if (db == null)
+	{
+		LogError("[XenForo-API] (SQL_GetXenForoGroups) Query error by void: '%s'", error);
+		return;
+	}
+	else
+	{
+		if (results.HasResults)
+		{
+			delete g_smGroups;
+			g_smGroups = new StringMap();
+
+			delete g_smGroupBanner;
+			g_smGroupBanner = new StringMap();
+
+			while (results.FetchRow())
+			{
+				int groupid = results.FetchInt(0);
+
+				char sKey[12];
+				IntToString(groupid, sKey, sizeof(sKey));
+
+				char sName[64];
+				results.FetchString(1, sName, sizeof(sName));
+
+				char sBanner[32];
+				results.FetchString(2, sBanner, sizeof(sBanner));
+
+				LogMessage("[XenForo-API] (SQL_GetXenForoGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
+
+				g_smGroups.SetString(sKey, sName);
+
+				if (strlen(sBanner) > 1)
+				{
+					g_smGroupBanner.SetString(sKey, sBanner);
+				}
+			}
+		}
+	}
+}
+
 public int Native_GrabClientID(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
@@ -361,14 +418,14 @@ public int Native_TExecute(Handle plugin, int numParams)
 	DBPriority prio = GetNativeCell(2);
 	
 	SQL_TQuery_XenForo(SQL_EmptyCallback, sQuery, 0, prio);
-	LogError("SQL QUERY: XenForo_TExecute - Query: '%s'", sQuery);
+	LogError("[XenForo-API] (Native_TExecute) SQL QUERY: XenForo_TExecute - Query: '%s'", sQuery);
 }
 
-public int SQL_EmptyCallback(Handle owner, Handle hndl, const char[] error, any data)
+public int SQL_EmptyCallback(Database db, DBResultSet results, const char[] error, any data)
 {
-	if (hndl == null)
+	if (db == null)
 	{
-		LogError("Query error by void: '%s'", error);
+		LogError("[XenForo-API] (SQL_EmptyCallback) Query error by void: '%s'", error);
 		return;
 	}
 }
@@ -394,4 +451,24 @@ stock bool IsClientValid(int client)
 	}
 	
 	return false;
+}
+
+public int Native_GetGroupList(Handle plugin, int numParams)
+{
+	if (g_smGroups != null)
+	{
+		return view_as<int>(g_smGroups);
+	}
+
+	return -1;
+}
+
+public int Native_GetGroupBannerText(Handle plugin, int numParams)
+{
+	if (g_smGroupBanner != null)
+	{
+		return view_as<int>(g_smGroupBanner);
+	}
+
+	return -1;
 }

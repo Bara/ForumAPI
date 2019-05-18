@@ -26,7 +26,7 @@ native int XenForo_GetClientPrimaryGroup(int client);
 
 /**
  * Returns the secondary groups as arraylist
- * NOTE: This ArrayList must be closed
+ * NOTE: Don't close/delete this ArrayList
  *
  * @param client		client index
  *
@@ -116,6 +116,30 @@ forward void XF_OnInfoProcessed(int client, const char[] name, int primarygroup,
  **/
 forward void XF_OnConnected();
 
+/**
+ * Returns a stringmap of all xenforo groups.
+ * key is the groupid and value (string) name of group
+ * Note: You shouldn't close/delete this stringmap
+ *
+ * @noparam
+ *
+ * @return			Stringmap or -1 for nothing
+ * 
+ */
+native StringMap XenForo_GetGroupList();
+
+/**
+ * Returns a stringmap with all group banners (if exists).
+ * key is the groupid and value (string) banner_text of the group.
+ * Note 1: No entry = No banner_text
+ * Note 2: You shouldn't close/delete this stringmap
+ *
+ * @noparam
+ *
+ * @return			Stringmap or -1 for nothing
+ */
+native StringMap XenForo_GetGroupBannerText();
+
 public SharedPlugin __pl_xenforo_api = 
 {
 	name = "xenforo_api",
@@ -131,9 +155,14 @@ public SharedPlugin __pl_xenforo_api =
 public __pl_xenforo_api_SetNTVOptional()
 {
 	MarkNativeAsOptional("XenForo_GetClientID");
+	MarkNativeAsOptional("XenForo_GetClientPrimaryGroup");
+	MarkNativeAsOptional("XenForo_GetClientSecondaryGroups");
+	MarkNativeAsOptional("XenForo_GetClientName");
 	MarkNativeAsOptional("XenForo_IsProcessed");
 	MarkNativeAsOptional("XenForo_TExecute");
-	MarkNativeAsOptional("XenForo_IsConnected");
 	MarkNativeAsOptional("XenForo_GetDatabase");
+	MarkNativeAsOptional("XenForo_IsConnected");
+	MarkNativeAsOptional("XenForo_GetGroupList");
+	MarkNativeAsOptional("XenForo_GetGroupBannerText");
 }
 #endif
