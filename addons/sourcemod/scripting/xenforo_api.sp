@@ -337,7 +337,10 @@ public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] e
 				char sBanner[32];
 				results.FetchString(2, sBanner, sizeof(sBanner));
 
-				LogMessage("[XenForo-API] (SQL_GetXenForoGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
+				if (g_cDebug.BoolValue)
+				{
+					LogMessage("[XenForo-API] (SQL_GetXenForoGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
+				}
 
 				g_smGroups.SetString(sKey, sName);
 
