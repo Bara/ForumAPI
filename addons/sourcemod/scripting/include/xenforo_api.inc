@@ -44,6 +44,15 @@ native ArrayList XenForo_GetClientSecondaryGroups(int client);
 native bool XenForo_GetClientName(int client, const char[] name);
 
 /**
+ * Returns the custom title
+ *
+ * @param client		client index
+ *
+ * @return				True custom found found, otherwise false
+ **/
+native bool XenForo_GetClientCustomTitle(int client, const char[] customtitle);
+
+/**
  * Returns true or false based on if they are processed or not.
  * Being processed means they have a UserID, credits, etc.
  *

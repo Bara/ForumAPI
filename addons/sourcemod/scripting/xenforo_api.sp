@@ -18,6 +18,7 @@ Handle g_hOnConnected;
 char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
 int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
 ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
+char g_sCustomTitle[MAXPLAYERS + 1];
 
 StringMap g_smGroups = null;
 StringMap g_smGroupBanner = null;
@@ -36,10 +37,11 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	CreateNative("XenForo_GetClientID", Native_GrabClientID);
-	CreateNative("XenForo_GetClientName", Native_GrabClientName);
-	CreateNative("XenForo_GetClientPrimaryGroup", Native_GrabClientPrimaryGroup);
-	CreateNative("XenForo_GetClientSecondaryGroups", Native_GrabClientSecondaryGroups);
+	CreateNative("XenForo_GetClientID", Native_GetClientID);
+	CreateNative("XenForo_GetClientName", Native_GetClientName);
+	CreateNative("XenForo_GetClientCustomTitle", Native_GetClientCustomTitle);
+	CreateNative("XenForo_GetClientPrimaryGroup", Native_GetClientPrimaryGroup);
+	CreateNative("XenForo_GetClientSecondaryGroups", Native_GetClientSecondaryGroups);
 	CreateNative("XenForo_IsProcessed", Native_IsProcessed);
 	CreateNative("XenForo_TExecute", Native_TExecute);
 	CreateNative("XenForo_IsConnected", Native_IsConnected);
@@ -210,7 +212,7 @@ public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error,
 			}
 
 			char sQuery[256];
-			Format(sQuery, sizeof(sQuery), "SELECT username, user_group_id, secondary_group_ids FROM xf_user WHERE user_id = '%d'", g_iUserID[client]);
+			Format(sQuery, sizeof(sQuery), "SELECT username, user_group_id, secondary_group_ids, custom_title FROM xf_user WHERE user_id = '%d'", g_iUserID[client]);
 			g_dDatabase.Query(SQL_UserInformations, sQuery, userid);
 		}
 		else
@@ -267,6 +269,8 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 			{
 				g_aSecondaryGroups[client].Push(StringToInt(sSecondaryGroups[i]));
 			}
+
+			results.FetchString(3, g_sCustomTitle[client], sizeof(g_sCustomTitle[]));
 			
 			Call_StartForward(g_hOnInfoProcessed);
 			Call_PushCell(client);
@@ -353,7 +357,7 @@ public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] e
 	}
 }
 
-public int Native_GrabClientID(Handle plugin, int numParams)
+public int Native_GetClientID(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	
@@ -365,7 +369,7 @@ public int Native_GrabClientID(Handle plugin, int numParams)
 	return -1;
 }
 
-public int Native_GrabClientPrimaryGroup(Handle plugin, int numParams)
+public int Native_GetClientPrimaryGroup(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	
@@ -377,7 +381,7 @@ public int Native_GrabClientPrimaryGroup(Handle plugin, int numParams)
 	return -1;
 }
 
-public int Native_GrabClientSecondaryGroups(Handle plugin, int numParams)
+public int Native_GetClientSecondaryGroups(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	
@@ -390,13 +394,26 @@ public int Native_GrabClientSecondaryGroups(Handle plugin, int numParams)
 	return -1;
 }
 
-public int Native_GrabClientName(Handle plugin, int numParams)
+public int Native_GetClientName(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	
 	if (g_bIsProcessed[client])
 	{
 		SetNativeString(2, g_sName[client], sizeof(g_sName[]));
+		return true;
+	}
+	
+	return false;
+}
+
+public int Native_GetClientCustomTitle(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	
+	if (g_bIsProcessed[client])
+	{
+		SetNativeString(2, g_sCustomTitle[client], sizeof(g_sCustomTitle[]));
 		return true;
 	}
 	
