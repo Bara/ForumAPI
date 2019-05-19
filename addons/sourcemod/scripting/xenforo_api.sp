@@ -29,8 +29,8 @@ public Plugin myinfo =
 {
 	name = "XenForo - API",
 	author = "Bara (Original Author: Drixevel)",
-	description = "1.0.0",
-	version = "",
+	description = "",
+	version = "1.0.0",
 	url = "github.com/Bara"
 };
 
