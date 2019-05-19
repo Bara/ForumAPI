@@ -62,7 +62,7 @@ public Action Timer_UpdateUnreadCount(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
 
-	if (IsClientInGame(client))
+	if (client > 0 && !IsFakeClient(client) && IsClientInGame(client))
 	{
 		UpdateUnreadCount(client);
 	}
@@ -87,7 +87,7 @@ public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] er
 	else
 	{
 		int client = GetClientOfUserId(data);
-		if (IsClientInGame(client))
+		if (client > 0 && !IsFakeClient(client) && IsClientInGame(client))
 		{
 			if (results.RowCount > 0 && results.FetchRow())
 			{
@@ -102,7 +102,7 @@ public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] er
 
 void PostUnreadStuff(int client)
 {
-	if (!IsClientInGame(client))
+	if (client > 0 && !IsFakeClient(client) && !IsClientInGame(client))
 	{
 		return;
 	}
