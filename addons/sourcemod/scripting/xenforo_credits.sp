@@ -172,7 +172,6 @@ public void SQL_GetClientCredits(Database db, DBResultSet results, const char[] 
 	if(db == null || strlen(error) > 0)
 	{
 		SetFailState("[XenForo-Credits] (SQL_GetClientCredits) Fail at Query: %s", error);
-		delete results;
 		return;
 	}
 	else
@@ -193,8 +192,6 @@ public void SQL_GetClientCredits(Database db, DBResultSet results, const char[] 
 			}
 		}
 	}
-	
-	delete results;
 }
 
 public int Native_GetClientCredits(Handle plugin, int numParams)
