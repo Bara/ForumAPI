@@ -19,6 +19,11 @@ public void OnPluginStart()
     RegConsoleCmd("sm_xftest", Command_XFTest);
 }
 
+public void XF_OnConnected()
+{
+    PrintToChatAll("XF_OnConnected executed");
+}
+
 public void XF_OnProcessed(int client, int xf_userid)
 {
     PrintToChat(client, "Your XF UserID: %d", xf_userid);
@@ -40,6 +45,24 @@ public void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, 
     }
 
     PrintToChat(client, "Your XF Secondary Groups: %s", sList);
+}
+
+public void XF_OnUserFieldsProcessed(int client, StringMap userfields)
+{
+    StringMapSnapshot smSnapshot = userfields.Snapshot();
+    StringMap smFields = XenForo_GetUserFields();
+    char sKey[32], sValue[128], sPhrase[64];
+
+    for (int i = 0; i < smSnapshot.Length; i++)
+    {
+        smSnapshot.GetKey(i, sKey, sizeof(sKey));
+        userfields.GetString(sKey, sValue, sizeof(sValue));
+        smFields.GetString(sKey, sPhrase, sizeof(sPhrase));
+
+        PrintToChat(client, "Key: %s (id: %s), Value: %s", sPhrase, sKey, sValue);
+    }
+
+    delete smSnapshot;
 }
 
 public void XF_OnCreditsUpdate(int client, bool add, int credits, int newCredits)
@@ -82,4 +105,21 @@ public Action Command_XFTest(int client, int args)
 
     PrintToChat(client, "Your XF Secondary Groups: %s", sList);
     PrintToChat(client, "Your XF Credits: %d", XenForo_GetClientCredits(client));
+
+    StringMap smFields = XenForo_GetUserFields();
+    StringMap smUserFields = XenForo_GetClientUserFields(client);
+    StringMapSnapshot smSnapshot = smUserFields.Snapshot();
+    
+    char sFieldKey[32], sFieldValue[128], sFieldPhrase[64];
+
+    for (int i = 0; i < smSnapshot.Length; i++)
+    {
+        smSnapshot.GetKey(i, sFieldKey, sizeof(sFieldKey));
+        smUserFields.GetString(sFieldKey, sFieldValue, sizeof(sFieldValue));
+        smFields.GetString(sFieldKey, sFieldPhrase, sizeof(sFieldPhrase));
+
+        PrintToChat(client, "Key: %s (id: %s), Value: %s", sFieldPhrase, sFieldKey, sFieldValue);
+    }
+
+    delete smSnapshot;
 }

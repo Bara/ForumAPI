@@ -9,20 +9,26 @@
 ConVar g_cEnable = null;
 ConVar g_cDebug = null;
 
-Database g_dDatabase;
+Database g_dDatabase = null;
 
-Handle g_hOnGrabProcessed;
-Handle g_hOnInfoProcessed;
-Handle g_hOnConnected;
+Handle g_hOnGrabProcessed = null;
+Handle g_hOnInfoProcessed = null;
+Handle g_hOnUserFieldsProcessed = null;
+Handle g_hOnConnected = null;
 
 char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
 int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
 ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
 char g_sCustomTitle[MAXPLAYERS + 1];
+StringMap g_smUserFields[MAXPLAYERS + 1] = { null, ... };
+int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
 
 StringMap g_smGroups = null;
 StringMap g_smGroupBanner = null;
-StringMap g_smUserFields = null;
+StringMap g_smFields = null;
+
+bool g_bGroups = false;
+bool g_bFields = false;
 
 bool g_bIsProcessed[MAXPLAYERS + 1] = { false, ... };
 int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
@@ -49,9 +55,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("XenForo_GetDatabase", Native_GetDatabase);
 	CreateNative("XenForo_GetGroupList", Native_GetGroupList);
 	CreateNative("XenForo_GetGroupBannerText", Native_GetGroupBannerText);
+	CreateNative("XenForo_GetUserFields", Native_GetUserFields);
+	CreateNative("XenForo_GetClientUserFields", Native_GetClientUserFields);
 
 	g_hOnGrabProcessed = CreateGlobalForward("XF_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
 	g_hOnInfoProcessed = CreateGlobalForward("XF_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
+	g_hOnUserFieldsProcessed = CreateGlobalForward("XF_OnUserFieldsProcessed", ET_Ignore, Param_Cell, Param_Cell);
 	g_hOnConnected = CreateGlobalForward("XF_OnConnected", ET_Ignore);
 	
 	RegPluginLibrary("xenforo_api");
@@ -109,9 +118,9 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 	}
 	
 	g_dDatabase = db;
-	
-	Call_StartForward(g_hOnConnected);
-	Call_Finish();
+
+	g_bGroups = false;
+	g_bFields = false;
 
 	LoadXenForoGroups();
 	LoadXenForoUserFields();
@@ -120,7 +129,18 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 	{
 		LogMessage("XenForo API has connected to SQL successfully.");
 	}
-	
+}
+
+void LoadClients()
+{
+	if (!g_bGroups || !g_bFields)
+	{
+		return;
+	}
+
+	Call_StartForward(g_hOnConnected);
+	Call_Finish();
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i))
@@ -140,7 +160,9 @@ public void OnClientConnected(int client)
 	g_bIsProcessed[client] = false;
 	g_iUserID[client] = -1;
 	g_iPrimaryGroup[client] = -1;
+	g_iFieldCount[client] = -1;
 	delete g_aSecondaryGroups[client];
+	delete g_smUserFields[client];
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -160,7 +182,7 @@ public void OnClientPostAdminCheck(int client)
 	
 	char sQuery[256];
 	Format(sQuery, sizeof(sQuery), "SELECT user_id FROM xf_user_connected_account WHERE provider = 'steam' AND provider_key = '%s'", sCommunityID);
-	g_dDatabase.Query(SQL_GrabUserID, sQuery, GetClientUserId(client));
+	g_dDatabase.Query(SQL_GetUserId, sQuery, GetClientUserId(client));
 	
 	if (g_cDebug.BoolValue)
 	{
@@ -168,11 +190,11 @@ public void OnClientPostAdminCheck(int client)
 	}
 }
 
-public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error, int userid)
+public void SQL_GetUserId(Database db, DBResultSet results, const char[] error, int userid)
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_GrabUserID) Fail at Query: %s", error);
+		SetFailState("[XenForo-API] (SQL_GetUserId) Fail at Query: %s", error);
 		return;
 	}
 	else
@@ -181,20 +203,20 @@ public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error,
 		
 		if (client > 0 && !IsClientValid(client))
 		{
-			LogError("[XenForo-API] (SQL_GrabUserID) Error grabbing User Data: Client invalid");
+			LogError("[XenForo-API] (SQL_GetUserId) Error grabbing User Data: Client invalid");
 			return;
 		}
 		
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[XenForo-API] (SQL_GrabUserID) Retrieving data for %N...", client);
+			LogMessage("[XenForo-API] (SQL_GetUserId) Retrieving data for %N...", client);
 		}
 		
 		if (results.FetchRow())
 		{
 			if (results.IsFieldNull(0))
 			{
-				LogError("[XenForo-API] (SQL_GrabUserID) Error retrieving User Data: (Field is null)");
+				LogError("[XenForo-API] (SQL_GetUserId) Error retrieving User Data: (Field is null)");
 				return;
 			}
 			
@@ -208,16 +230,49 @@ public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error,
 			
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("[XenForo-API] (SQL_GrabUserID) User '%N' has been processed successfully!", client);
+				LogMessage("[XenForo-API] (SQL_GetUserId) User '%N' has been processed successfully!", client);
 			}
 
 			char sQuery[256];
 			Format(sQuery, sizeof(sQuery), "SELECT username, user_group_id, secondary_group_ids, custom_title FROM xf_user WHERE user_id = '%d'", g_iUserID[client]);
 			g_dDatabase.Query(SQL_UserInformations, sQuery, userid);
+
+			if (g_cDebug.BoolValue)
+			{
+				LogMessage("SQL QUERY: SQL_GetUserId - User Informations - Query: %s", sQuery);
+			}
+
+			StringMapSnapshot smFields = g_smFields.Snapshot();
+			char sKey[32];
+
+			g_iFieldCount[client] = 0;
+
+			delete g_smUserFields[client];
+			g_smUserFields[client] = new StringMap();
+
+			for (int i = 0; i < smFields.Length; i++)
+			{
+				smFields.GetKey(i, sKey, sizeof(sKey));
+
+				LogMessage("smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
+
+				Format(sQuery, sizeof(sQuery), "SELECT field_value FROM xf_user_field_value WHERE user_id = '%d' AND field_id = \"%s\"", g_iUserID[client], sKey);
+				DataPack pack = new DataPack();
+				pack.WriteCell(userid);
+				pack.WriteString(sKey);
+				g_dDatabase.Query(SQL_UserFields, sQuery, pack);
+
+				if (g_cDebug.BoolValue)
+				{
+					LogMessage("SQL QUERY: SQL_GetUserId - User Fields - Query: %s", sQuery);
+				}
+			}
+
+			delete smFields;
 		}
 		else
 		{
-			LogError("[XenForo-API] (SQL_GrabUserID) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+			LogError("[XenForo-API] (SQL_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
 		}
 	}
 }
@@ -291,18 +346,96 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 	}
 }
 
-void LoadXenForoUserFields()
-{
-	char sQuery[128];
-	Format(sQuery, sizeof(sQuery), "SELECT field_id FROM xf_user_field");
-	g_dDatabase.Query(SQL_UserFields, sQuery);
-}
 
-public void SQL_UserFields(Database db, DBResultSet results, const char[] error, int userid)
+
+public void SQL_UserFields(Database db, DBResultSet results, const char[] error, DataPack pack)
 {
 	if(db == null || strlen(error) > 0)
 	{
 		SetFailState("[XenForo-API] (SQL_UserFields) Fail at Query: %s", error);
+		delete pack;
+		return;
+	}
+	else
+	{
+		pack.Reset();
+
+		int client = GetClientOfUserId(pack.ReadCell());
+
+		char sKey[32];
+		pack.ReadString(sKey, sizeof(sKey));
+		
+		if (!IsClientValid(client))
+		{
+			LogError("[XenForo-API] (SQL_UserFields) Error grabbing user fields: Client invalid");
+			return;
+		}
+
+		g_iFieldCount[client]++;
+		LogMessage("Field Count: %d", g_iFieldCount[client]);
+
+		if (g_cDebug.BoolValue)
+		{
+			LogMessage("[XenForo-API] (SQL_UserFields) Retrieving user fields for %N...", client);
+		}
+		
+		if (results.FetchRow())
+		{
+			if (results.IsFieldNull(0))
+			{
+				LogError("[XenForo-API] (SQL_UserFields) Error retrieving user fields: (Field is null)");
+				return;
+			}
+
+			char sValue[128];
+			results.FetchString(0, sValue, sizeof(sValue));
+
+			if (strlen(sValue) > 1)
+			{
+				g_smUserFields[client].SetString(sKey, sValue);
+			}
+
+			if (g_iFieldCount[client] == g_smFields.Size)
+			{
+				Call_StartForward(g_hOnUserFieldsProcessed);
+				Call_PushCell(client);
+				Call_PushCell(g_smUserFields[client]);
+				Call_Finish();
+
+				if (g_cDebug.BoolValue)
+				{
+					LogMessage("[XenForo-API] (SQL_UserFields) user fields for'%N' has been processed successfully!", client);
+				}
+			}
+		}
+		else
+		{
+			LogError("[XenForo-API] (SQL_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+		}
+	}
+}
+
+void LoadXenForoUserFields()
+{
+	delete g_smFields;
+	g_smFields = new StringMap();
+
+	char sQuery[128];
+	Format(sQuery, sizeof(sQuery), "SELECT field_id FROM xf_user_field");
+	g_dDatabase.Query(SQL_Fields, sQuery);
+
+	if (g_cDebug.BoolValue)
+	{
+		LogMessage("SQL QUERY: LoadXenForoUserFields - Query: %s", sQuery);
+	}
+}
+
+public void SQL_Fields(Database db, DBResultSet results, const char[] error, int userid)
+{
+	if(db == null || strlen(error) > 0)
+	{
+		SetFailState("[XenForo-API] (SQL_Fields) Fail at Query: %s", error);
+		delete g_smFields;
 		return;
 	}
 	else
@@ -316,7 +449,7 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 
 				if (g_cDebug.BoolValue)
 				{
-					LogMessage("[XenForo-API] (SQL_UserFields) Field ID: %s", sField);
+					LogMessage("[XenForo-API] (SQL_Fields) Field ID: %s", sField);
 				}
 
 				char sTitle[128];
@@ -327,7 +460,15 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 				DataPack pack = new DataPack();
 				pack.WriteString(sField);
 				g_dDatabase.Query(SQL_GetUserFieldPhrase, sQuery, pack);
+
+				if (g_cDebug.BoolValue)
+				{
+					LogMessage("SQL QUERY: SQL_Fields - Query: %s", sQuery);
+				}
 			}
+
+			g_bFields = true;
+			LoadClients();
 		}
 	}
 }
@@ -365,9 +506,7 @@ public void SQL_GetUserFieldPhrase(Database db, DBResultSet results, const char[
 			char sPhrase[64];
 			results.FetchString(0, sPhrase, sizeof(sPhrase));
 
-			delete g_smUserFields;
-			g_smUserFields = new StringMap();
-			g_smUserFields.SetString(sField, sPhrase);
+			g_smFields.SetString(sField, sPhrase);
 
 			if (g_cDebug.BoolValue)
 			{
@@ -382,6 +521,11 @@ void LoadXenForoGroups()
 	char sQuery[256];
 	Format(sQuery, sizeof(sQuery), "SELECT user_group_id, title, banner_text FROM xf_user_group");
 	g_dDatabase.Query(SQL_GetXenForoGroups, sQuery);
+
+	if (g_cDebug.BoolValue)
+	{
+		LogMessage("SQL QUERY: LoadXenForoGroups - Query: %s", sQuery);
+	}
 }
 
 public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] error, any data)
@@ -427,6 +571,9 @@ public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] e
 				}
 			}
 		}
+
+		g_bGroups = true;
+		LoadClients();
 	}
 }
 
@@ -560,6 +707,29 @@ public int Native_GetGroupBannerText(Handle plugin, int numParams)
 	if (g_smGroupBanner != null)
 	{
 		return view_as<int>(g_smGroupBanner);
+	}
+
+	return -1;
+}
+
+public int Native_GetUserFields(Handle plugin, int numParams)
+{
+	if (g_smFields != null)
+	{
+		return view_as<int>(g_smFields);
+	}
+
+	return -1;
+}
+
+
+public int Native_GetClientUserFields(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (g_smUserFields[client] != null)
+	{
+		return view_as<int>(g_smUserFields[client]);
 	}
 
 	return -1;

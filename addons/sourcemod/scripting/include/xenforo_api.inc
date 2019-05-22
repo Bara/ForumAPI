@@ -44,6 +44,15 @@ native ArrayList XenForo_GetClientSecondaryGroups(int client);
 native bool XenForo_GetClientName(int client, const char[] name);
 
 /**
+ * Returns stringmap with all user fields for the specific client
+ *
+ * @param client		client index
+ *
+ * @return				Stringmap with all user fields for the specific client
+ **/
+native StringMap XenForo_GetClientUserFields(int client);
+
+/**
  * Returns the custom title
  *
  * @param client		client index
@@ -105,7 +114,7 @@ native bool XenForo_IsConnected();
 forward void XF_OnProcessed(int client, int xf_userid);
 
 /**
- * Called after user was processed
+ * Called after user informations was processed
  *
  * @param client			client index
  * @param name				username in forum
@@ -115,6 +124,17 @@ forward void XF_OnProcessed(int client, int xf_userid);
  * @noreturn
  **/
 forward void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups);
+
+/**
+ * Called after user fields was processed
+ *
+ * @param client			client index
+ * @param userfields		Keyword is the field_id/keyword of user field, value is value for the specific user
+							Note: Don't close/delete this stringmap
+ *
+ * @noreturn
+ **/
+forward void XF_OnUserFieldsProcessed(int client, StringMap userfields);
 
 /**
  * Called when the plugin connects to the database successfully.
@@ -149,6 +169,17 @@ native StringMap XenForo_GetGroupList();
  */
 native StringMap XenForo_GetGroupBannerText();
 
+/**
+ * Returns a stringmap with all guser fields.
+ * key is the field_id/keyword and value (string) name of the user field.
+ * Note 2: You shouldn't close/delete this stringmap
+ *
+ * @noparam
+ *
+ * @return			Stringmap or -1 for nothing
+ */
+native StringMap XenForo_GetUserFields();
+
 public SharedPlugin __pl_xenforo_api = 
 {
 	name = "xenforo_api",
@@ -167,11 +198,13 @@ public __pl_xenforo_api_SetNTVOptional()
 	MarkNativeAsOptional("XenForo_GetClientPrimaryGroup");
 	MarkNativeAsOptional("XenForo_GetClientSecondaryGroups");
 	MarkNativeAsOptional("XenForo_GetClientName");
+	MarkNativeAsOptional("XenForo_GetClientUserFields");
 	MarkNativeAsOptional("XenForo_IsProcessed");
 	MarkNativeAsOptional("XenForo_TExecute");
 	MarkNativeAsOptional("XenForo_GetDatabase");
 	MarkNativeAsOptional("XenForo_IsConnected");
 	MarkNativeAsOptional("XenForo_GetGroupList");
 	MarkNativeAsOptional("XenForo_GetGroupBannerText");
+	MarkNativeAsOptional("XenForo_GetUserFields");
 }
 #endif
