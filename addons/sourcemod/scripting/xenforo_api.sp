@@ -22,9 +22,10 @@ char g_sCustomTitle[MAXPLAYERS + 1];
 
 StringMap g_smGroups = null;
 StringMap g_smGroupBanner = null;
+StringMap g_smUserFields = null;
 
-bool g_bIsProcessed[MAXPLAYERS + 1];
-int g_iUserID[MAXPLAYERS + 1];
+bool g_bIsProcessed[MAXPLAYERS + 1] = { false, ... };
+int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
 
 public Plugin myinfo = 
 {
@@ -113,6 +114,7 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 	Call_Finish();
 
 	LoadXenForoGroups();
+	LoadXenForoUserFields();
 	
 	if (g_cDebug.BoolValue)
 	{
@@ -157,8 +159,6 @@ public void OnClientPostAdminCheck(int client)
 	GetClientAuthId(client, AuthId_SteamID64, sCommunityID, sizeof(sCommunityID));
 	
 	char sQuery[256];
-	// For XenForo 1.5(?)
-	// Format(sQuery, sizeof(sQuery), "SELECT user_id FROM xf_user_external_auth WHERE provider = 'steam' AND provider_key = '%s'", sCommunityID);
 	Format(sQuery, sizeof(sQuery), "SELECT user_id FROM xf_user_connected_account WHERE provider = 'steam' AND provider_key = '%s'", sCommunityID);
 	g_dDatabase.Query(SQL_GrabUserID, sQuery, GetClientUserId(client));
 	
@@ -187,7 +187,7 @@ public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error,
 		
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("Retrieving data for %N...", client);
+			LogMessage("[XenForo-API] (SQL_GrabUserID) Retrieving data for %N...", client);
 		}
 		
 		if (results.FetchRow())
@@ -208,7 +208,7 @@ public void SQL_GrabUserID(Database db, DBResultSet results, const char[] error,
 			
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("User '%N' has been processed successfully!", client);
+				LogMessage("[XenForo-API] (SQL_GrabUserID) User '%N' has been processed successfully!", client);
 			}
 
 			char sQuery[256];
@@ -241,7 +241,7 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 		
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("Retrieving informations for %N...", client);
+			LogMessage("[XenForo-API] (SQL_UserInformations) Retrieving informations for %N...", client);
 		}
 		
 		if (results.FetchRow())
@@ -281,7 +281,7 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 			
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("User informations for'%N' has been processed successfully!", client);
+				LogMessage("[XenForo-API] (SQL_UserInformations) User informations for'%N' has been processed successfully!", client);
 			}
 		}
 		else
@@ -291,15 +291,88 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 	}
 }
 
-void SQL_TQuery_XenForo(SQLQueryCallback callback, const char[] sQuery, any data = 0, DBPriority prio = DBPrio_Normal)
+void LoadXenForoUserFields()
 {
-	if (g_dDatabase != null)
+	char sQuery[128];
+	Format(sQuery, sizeof(sQuery), "SELECT field_id FROM xf_user_field");
+	g_dDatabase.Query(SQL_UserFields, sQuery);
+}
+
+public void SQL_UserFields(Database db, DBResultSet results, const char[] error, int userid)
+{
+	if(db == null || strlen(error) > 0)
 	{
-		g_dDatabase.Query(callback, sQuery, data, prio);
-		
+		SetFailState("[XenForo-API] (SQL_UserFields) Fail at Query: %s", error);
+		return;
+	}
+	else
+	{
+		if (results.HasResults)
+		{
+			while (results.FetchRow())
+			{
+				char sField[64];
+				results.FetchString(0, sField, sizeof(sField));
+
+				if (g_cDebug.BoolValue)
+				{
+					LogMessage("[XenForo-API] (SQL_UserFields) Field ID: %s", sField);
+				}
+
+				char sTitle[128];
+				Format(sTitle, sizeof(sTitle), "user_field_title.%s", sField);
+
+				char sQuery[512];
+				Format(sQuery, sizeof(sQuery), "SELECT phrase_text FROM xf_phrase WHERE title = \"%s\"", sTitle);
+				DataPack pack = new DataPack();
+				pack.WriteString(sField);
+				g_dDatabase.Query(SQL_GetUserFieldPhrase, sQuery, pack);
+			}
+		}
+	}
+}
+
+public void SQL_GetUserFieldPhrase(Database db, DBResultSet results, const char[] error, DataPack pack)
+{
+	if(db == null || strlen(error) > 0)
+	{
+		SetFailState("[XenForo-API] (SQL_GetUserFieldPhrase) Fail at Query: %s", error);
+		delete pack;
+		return;
+	}
+	else
+	{
+		pack.Reset();
+
+		char sField[32];
+		pack.ReadString(sField, sizeof(sField));
+
+		delete pack;
+
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("SQL Executed: %s", sQuery);
+			LogMessage("[XenForo-API] (SQL_GetUserFieldPhrase) Retrieving phrase for user_field %s...", sField);
+		}
+		
+		if (results.FetchRow())
+		{
+			if (results.IsFieldNull(0))
+			{
+				LogError("[XenForo-API] (SQL_GetUserFieldPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
+				return;
+			}
+
+			char sPhrase[64];
+			results.FetchString(0, sPhrase, sizeof(sPhrase));
+
+			delete g_smUserFields;
+			g_smUserFields = new StringMap();
+			g_smUserFields.SetString(sField, sPhrase);
+
+			if (g_cDebug.BoolValue)
+			{
+				LogMessage("[XenForo-API] (SQL_GetUserFieldPhrase) Added user_field %s (Name: %s)", sField, sPhrase);
+			}
 		}
 	}
 }
@@ -387,8 +460,7 @@ public int Native_GetClientSecondaryGroups(Handle plugin, int numParams)
 	
 	if (g_bIsProcessed[client] && g_aSecondaryGroups[client] != null)
 	{
-		ArrayList array = g_aSecondaryGroups[client];
-		return view_as<int>(array);
+		return view_as<int>(g_aSecondaryGroups[client]);
 	}
 	
 	return -1;
@@ -437,7 +509,7 @@ public int Native_TExecute(Handle plugin, int numParams)
 	
 	DBPriority prio = GetNativeCell(2);
 	
-	SQL_TQuery_XenForo(SQL_EmptyCallback, sQuery, 0, prio);
+	g_dDatabase.Query(SQL_EmptyCallback, sQuery, 0, prio);
 	LogError("[XenForo-API] (Native_TExecute) SQL QUERY: XenForo_TExecute - Query: '%s'", sQuery);
 }
 

@@ -184,6 +184,18 @@ bool LoadGroups()
 		return false;
 	}
 
+	bool bDebug = true;
+
+	if (g_cDebug == null)
+	{
+		g_cDebug = FindConVar("xenforo_api_debug");
+
+		if (g_cDebug == null)
+		{
+			bDebug = false;
+		}
+	}
+
 	char sFile[PLATFORM_MAX_PATH + 1];
 	BuildPath(Path_SM, sFile, sizeof(sFile), "configs/xenforo_admins.cfg");
 
@@ -221,7 +233,7 @@ bool LoadGroups()
 	{
 		kvConfig.GetSectionName(sGroupID, sizeof(sGroupID));
 
-		if (g_cDebug.BoolValue)
+		if (bDebug && g_cDebug.BoolValue)
 		{
 			LogMessage("[Xenforo-Admin] (LoadGroups) SectionName: %s", sGroupID);
 		}
@@ -234,7 +246,7 @@ bool LoadGroups()
 				continue;
 			}
 
-			if (g_cDebug.BoolValue)
+			if (bDebug && g_cDebug.BoolValue)
 			{
 				LogMessage("[Xenforo-Admin] (LoadGroups) Can't find %s in group index stringmap", sName);
 			}
@@ -243,7 +255,7 @@ bool LoadGroups()
 
 			if (gGroup == INVALID_GROUP_ID)
 			{
-				if (g_cDebug.BoolValue)
+				if (bDebug && g_cDebug.BoolValue)
 				{
 					LogMessage("[Xenforo-Admin] (LoadGroups) Can't create admin group %s", sName);
 				}
@@ -258,7 +270,7 @@ bool LoadGroups()
 		}
 
 		g_smGroupIndex.SetValue(sGroupID, gGroup);
-		if (g_cDebug.BoolValue)
+		if (bDebug && g_cDebug.BoolValue)
 		{
 			LogMessage("[Xenforo-Admin] (LoadGroups) Saved group %s to group index (%d)", sName, gGroup);
 		}
@@ -271,7 +283,7 @@ bool LoadGroups()
 			{
 				if (FindFlagByChar(sFlags[i], iFlag))
 				{
-					if (g_cDebug.BoolValue)
+					if (bDebug && g_cDebug.BoolValue)
 					{
 						LogMessage("[Xenforo-Admin] (LoadGroups) Add flag %c (%d) to %s", sFlags[i], iFlag, sName);
 					}
@@ -281,7 +293,7 @@ bool LoadGroups()
 		}
 
 		int iImmunity = kvConfig.GetNum("immunity", 0);
-		if (g_cDebug.BoolValue)
+		if (bDebug && g_cDebug.BoolValue)
 		{
 			LogMessage("[Xenforo-Admin] (LoadGroups) Set immunity level for %s to %d", sName, iImmunity);
 		}
