@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <multicolors>
 #include <autoexecconfig>
-#include <xenforo_api>
+#include <forum_api>
 
 ConVar g_cInterval = null;
 ConVar g_cHomepage = null;
@@ -18,7 +18,7 @@ Database g_dDB = null;
 
 public Plugin myinfo = 
 {
-	name = "XenForo - Post unread alerts and conversations",
+	name = "Forum - Post unread alerts and conversations",
 	author = "Bara",
 	description = "",
 	version = "1.0.0",
@@ -31,20 +31,20 @@ public void OnPluginStart()
 	
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
-	AutoExecConfig_SetFile("xenforo_admins");
-	g_cInterval = AutoExecConfig_CreateConVar("xenforo_post_interval", "1", "Check in minutes that post an update of unread stuff.", _, true, 1.0);
-	g_cHomepage = AutoExecConfig_CreateConVar("xenforo_post_unread_url", "example.com", "Homepage url to your forum.");
-	g_cAlerts = AutoExecConfig_CreateConVar("xenforo_post_unread_alerts", "1", "Print every X minutes a message with the amount of unread alerts", _, true, 0.0, true, 1.0);
-	g_cConversations = AutoExecConfig_CreateConVar("xenforo_post_unread_conversations", "1", "Print every X minutes a message with the amount of unread conversations", _, true, 0.0, true, 1.0);
+	AutoExecConfig_SetFile("forum_admins");
+	g_cInterval = AutoExecConfig_CreateConVar("forum_post_interval", "1", "Check in minutes that post an update of unread stuff.", _, true, 1.0);
+	g_cHomepage = AutoExecConfig_CreateConVar("forum_post_unread_url", "example.com", "Homepage url to your forum.");
+	g_cAlerts = AutoExecConfig_CreateConVar("forum_post_unread_alerts", "1", "Print every X minutes a message with the amount of unread alerts", _, true, 0.0, true, 1.0);
+	g_cConversations = AutoExecConfig_CreateConVar("forum_post_unread_conversations", "1", "Print every X minutes a message with the amount of unread conversations", _, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
-	CSetPrefix("{darkblue}[XenForo]{default}");
+	CSetPrefix("{darkblue}[Forum]{default}");
 }
 
-public void XF_OnConnected()
+public void Forum_OnConnected()
 {
-	g_dDB = XenForo_GetDatabase();
+	g_dDB = Forum_GetDatabase();
 }
 
 public void OnClientPutInServer(int client)
@@ -53,7 +53,7 @@ public void OnClientPutInServer(int client)
 	g_iConversations[client] = -1;
 }
 
-public void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
+public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
 {
 	CreateTimer(g_cInterval.FloatValue * 60.0, Timer_UpdateUnreadCount, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -70,7 +70,7 @@ public Action Timer_UpdateUnreadCount(Handle timer, int userid)
 
 void UpdateUnreadCount(int client)
 {
-	int iUserID = XenForo_GetClientID(client);
+	int iUserID = Forum_GetClientID(client);
 
 	char sQuery[512];
 	Format(sQuery, sizeof(sQuery), "SELECT conversations_unread, alerts_unread FROM xf_user WHERE user_id = '%d'", iUserID);
@@ -81,7 +81,7 @@ public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] er
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-Unread] (SQL_GetUnreadStuff) Fail at Query: %s", error);
+		SetFailState("[Forum-Unread] (SQL_GetUnreadStuff) Fail at Query: %s", error);
 		return;
 	}
 	else

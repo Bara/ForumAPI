@@ -1,1 +1,1 @@
-# XenForo-API
+# Forum-API

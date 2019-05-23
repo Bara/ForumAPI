@@ -1,19 +1,19 @@
-#if defined _xenforo_api_included
+#if defined _forum_api_included
 	#endinput
 #endif
-#define _xenforo_api_included
+#define _forum_api_included
 
 ///////////////
 //Natives
 
 /**
- * Returns the user index of the client for Xenforo.
+ * Returns the user id of the client.
  *
  * @param client		client index
  *
  * @return				UserID of the client index.
  **/
-native int XenForo_GetClientID(int client);
+native int Forum_GetClientID(int client);
 
 /**
  * Returns the primary group
@@ -22,7 +22,7 @@ native int XenForo_GetClientID(int client);
  *
  * @return				primary group id
  **/
-native int XenForo_GetClientPrimaryGroup(int client);
+native int Forum_GetClientPrimaryGroup(int client);
 
 /**
  * Returns the secondary groups as arraylist
@@ -32,7 +32,7 @@ native int XenForo_GetClientPrimaryGroup(int client);
  *
  * @return				secondary group ids as arraylist
  **/
-native ArrayList XenForo_GetClientSecondaryGroups(int client);
+native ArrayList Forum_GetClientSecondaryGroups(int client);
 
 /**
  * Returns the user name
@@ -41,7 +41,7 @@ native ArrayList XenForo_GetClientSecondaryGroups(int client);
  *
  * @return				True user name found, otherwise false
  **/
-native bool XenForo_GetClientName(int client, const char[] name);
+native bool Forum_GetClientName(int client, const char[] name);
 
 /**
  * Returns stringmap with all user fields for the specific client
@@ -50,7 +50,7 @@ native bool XenForo_GetClientName(int client, const char[] name);
  *
  * @return				Stringmap with all user fields for the specific client
  **/
-native StringMap XenForo_GetClientUserFields(int client);
+native StringMap Forum_GetClientUserFields(int client);
 
 /**
  * Returns the custom title
@@ -59,7 +59,7 @@ native StringMap XenForo_GetClientUserFields(int client);
  *
  * @return				True custom found found, otherwise false
  **/
-native bool XenForo_GetClientCustomTitle(int client, const char[] customtitle);
+native bool Forum_GetClientCustomTitle(int client, const char[] customtitle);
 
 /**
  * Returns true or false based on if they are processed or not.
@@ -69,10 +69,10 @@ native bool XenForo_GetClientCustomTitle(int client, const char[] customtitle);
  *
  * @return				True if processed, false otherwise.
  **/
-native bool XenForo_IsProcessed(int client);
+native bool Forum_IsProcessed(int client);
 
 /**
- * Executes a query into the Xenforo database tables.
+ * Executes a query into the forum database tables.
  * Does not use any callbacks or retrieves any responses.
  *
  * @param sQuery		String buffer to execute.
@@ -80,7 +80,7 @@ native bool XenForo_IsProcessed(int client);
  *
  * @noreturn
  **/
-native void XenForo_TExecute(const char[] sQuery, DBPriority prio = DBPrio_Normal);
+native void Forum_TExecute(const char[] sQuery, DBPriority prio = DBPrio_Normal);
 
 /**
  * Returns the database handle
@@ -89,16 +89,16 @@ native void XenForo_TExecute(const char[] sQuery, DBPriority prio = DBPrio_Norma
  *
  * @return				Returns the database handle
  **/
-native Database XenForo_GetDatabase();
+native Database Forum_GetDatabase();
 
 /**
- * Returns if the plugin is connected successfully to the database for Xenforo.
+ * Returns if the plugin is connected successfully to the forum database.
  *
  * @noparams
  *
  * @return				True if connected, false otherwise.
  **/
-native bool XenForo_IsConnected();
+native bool Forum_IsConnected();
 
 ///////////////
 //Forwards
@@ -107,11 +107,11 @@ native bool XenForo_IsConnected();
  * Called when a user is processed by the plugin and receives a User ID.
  *
  * @param client		client index
- * @param xf_userid			xenforo user_id
+ * @param forum_userid	forum user_id
  *
  * @noreturn
  **/
-forward void XF_OnProcessed(int client, int xf_userid);
+forward void Forum_OnProcessed(int client, int forum_userid);
 
 /**
  * Called after user informations was processed
@@ -123,7 +123,7 @@ forward void XF_OnProcessed(int client, int xf_userid);
  *
  * @noreturn
  **/
-forward void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups);
+forward void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups);
 
 /**
  * Called after user fields was processed
@@ -134,7 +134,7 @@ forward void XF_OnInfoProcessed(int client, const char[] name, int primarygroup,
  *
  * @noreturn
  **/
-forward void XF_OnUserFieldsProcessed(int client, StringMap userfields);
+forward void Forum_OnUserFieldsProcessed(int client, StringMap userfields);
 
 /**
  * Called when the plugin connects to the database successfully.
@@ -143,10 +143,10 @@ forward void XF_OnUserFieldsProcessed(int client, StringMap userfields);
  *
  * @noreturn
  **/
-forward void XF_OnConnected();
+forward void Forum_OnConnected();
 
 /**
- * Returns a stringmap of all xenforo groups.
+ * Returns a stringmap of all forum groups.
  * key is the groupid and value (string) name of group
  * Note: You shouldn't close/delete this stringmap
  *
@@ -155,7 +155,7 @@ forward void XF_OnConnected();
  * @return			Stringmap or -1 for nothing
  * 
  */
-native StringMap XenForo_GetGroupList();
+native StringMap Forum_GetGroupList();
 
 /**
  * Returns a stringmap with all group banners (if exists).
@@ -167,7 +167,7 @@ native StringMap XenForo_GetGroupList();
  *
  * @return			Stringmap or -1 for nothing
  */
-native StringMap XenForo_GetGroupBannerText();
+native StringMap Forum_GetGroupBannerText();
 
 /**
  * Returns a stringmap with all guser fields.
@@ -178,12 +178,12 @@ native StringMap XenForo_GetGroupBannerText();
  *
  * @return			Stringmap or -1 for nothing
  */
-native StringMap XenForo_GetUserFields();
+native StringMap Forum_GetUserFields();
 
-public SharedPlugin __pl_xenforo_api = 
+public SharedPlugin __pl_forum_api = 
 {
-	name = "xenforo_api",
-	file = "xenforo_api.smx",
+	name = "forum_api",
+	file = "forum_api.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1,
 #else
@@ -192,19 +192,19 @@ public SharedPlugin __pl_xenforo_api =
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_xenforo_api_SetNTVOptional()
+public __pl_forum_api_SetNTVOptional()
 {
-	MarkNativeAsOptional("XenForo_GetClientID");
-	MarkNativeAsOptional("XenForo_GetClientPrimaryGroup");
-	MarkNativeAsOptional("XenForo_GetClientSecondaryGroups");
-	MarkNativeAsOptional("XenForo_GetClientName");
-	MarkNativeAsOptional("XenForo_GetClientUserFields");
-	MarkNativeAsOptional("XenForo_IsProcessed");
-	MarkNativeAsOptional("XenForo_TExecute");
-	MarkNativeAsOptional("XenForo_GetDatabase");
-	MarkNativeAsOptional("XenForo_IsConnected");
-	MarkNativeAsOptional("XenForo_GetGroupList");
-	MarkNativeAsOptional("XenForo_GetGroupBannerText");
-	MarkNativeAsOptional("XenForo_GetUserFields");
+	MarkNativeAsOptional("Forum_GetClientID");
+	MarkNativeAsOptional("Forum_GetClientPrimaryGroup");
+	MarkNativeAsOptional("Forum_GetClientSecondaryGroups");
+	MarkNativeAsOptional("Forum_GetClientName");
+	MarkNativeAsOptional("Forum_GetClientUserFields");
+	MarkNativeAsOptional("Forum_IsProcessed");
+	MarkNativeAsOptional("Forum_TExecute");
+	MarkNativeAsOptional("Forum_GetDatabase");
+	MarkNativeAsOptional("Forum_IsConnected");
+	MarkNativeAsOptional("Forum_GetGroupList");
+	MarkNativeAsOptional("Forum_GetGroupBannerText");
+	MarkNativeAsOptional("Forum_GetUserFields");
 }
 #endif

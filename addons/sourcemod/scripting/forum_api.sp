@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <multicolors>
 #include <autoexecconfig>
-#include <xenforo_api>
+#include <forum_api>
 
 ConVar g_cEnable = null;
 ConVar g_cDebug = null;
@@ -35,7 +35,7 @@ int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
 
 public Plugin myinfo = 
 {
-	name = "XenForo - API",
+	name = "Forum - API",
 	author = "Bara (Original Author: Drixevel)",
 	description = "",
 	version = "1.0.0",
@@ -44,26 +44,26 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	CreateNative("XenForo_GetClientID", Native_GetClientID);
-	CreateNative("XenForo_GetClientName", Native_GetClientName);
-	CreateNative("XenForo_GetClientCustomTitle", Native_GetClientCustomTitle);
-	CreateNative("XenForo_GetClientPrimaryGroup", Native_GetClientPrimaryGroup);
-	CreateNative("XenForo_GetClientSecondaryGroups", Native_GetClientSecondaryGroups);
-	CreateNative("XenForo_IsProcessed", Native_IsProcessed);
-	CreateNative("XenForo_TExecute", Native_TExecute);
-	CreateNative("XenForo_IsConnected", Native_IsConnected);
-	CreateNative("XenForo_GetDatabase", Native_GetDatabase);
-	CreateNative("XenForo_GetGroupList", Native_GetGroupList);
-	CreateNative("XenForo_GetGroupBannerText", Native_GetGroupBannerText);
-	CreateNative("XenForo_GetUserFields", Native_GetUserFields);
-	CreateNative("XenForo_GetClientUserFields", Native_GetClientUserFields);
+	CreateNative("Forum_GetClientID", Native_GetClientID);
+	CreateNative("Forum_GetClientName", Native_GetClientName);
+	CreateNative("Forum_GetClientCustomTitle", Native_GetClientCustomTitle);
+	CreateNative("Forum_GetClientPrimaryGroup", Native_GetClientPrimaryGroup);
+	CreateNative("Forum_GetClientSecondaryGroups", Native_GetClientSecondaryGroups);
+	CreateNative("Forum_IsProcessed", Native_IsProcessed);
+	CreateNative("Forum_TExecute", Native_TExecute);
+	CreateNative("Forum_IsConnected", Native_IsConnected);
+	CreateNative("Forum_GetDatabase", Native_GetDatabase);
+	CreateNative("Forum_GetGroupList", Native_GetGroupList);
+	CreateNative("Forum_GetGroupBannerText", Native_GetGroupBannerText);
+	CreateNative("Forum_GetUserFields", Native_GetUserFields);
+	CreateNative("Forum_GetClientUserFields", Native_GetClientUserFields);
 
-	g_hOnGrabProcessed = CreateGlobalForward("XF_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
-	g_hOnInfoProcessed = CreateGlobalForward("XF_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
-	g_hOnUserFieldsProcessed = CreateGlobalForward("XF_OnUserFieldsProcessed", ET_Ignore, Param_Cell, Param_Cell);
-	g_hOnConnected = CreateGlobalForward("XF_OnConnected", ET_Ignore);
+	g_hOnGrabProcessed = CreateGlobalForward("Forum_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnInfoProcessed = CreateGlobalForward("Forum_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
+	g_hOnUserFieldsProcessed = CreateGlobalForward("Forum_OnUserFieldsProcessed", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnConnected = CreateGlobalForward("Forum_OnConnected", ET_Ignore);
 	
-	RegPluginLibrary("xenforo_api");
+	RegPluginLibrary("forum_api");
 	
 	return APLRes_Success;
 }
@@ -74,36 +74,36 @@ public void OnPluginStart()
 	
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
-	AutoExecConfig_SetFile("xenforo_api");
-	g_cEnable = AutoExecConfig_CreateConVar("xenforo_api_status", "1", "Status of the plugin: (1 = on, 0 = off)", _, true, 0.0, true, 1.0);
-	g_cDebug = AutoExecConfig_CreateConVar("xenforo_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
+	AutoExecConfig_SetFile("forum_api");
+	g_cEnable = AutoExecConfig_CreateConVar("forum_api_status", "1", "Status of the plugin: (1 = on, 0 = off)", _, true, 0.0, true, 1.0);
+	g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
-	RegConsoleCmd("sm_xfid", Command_XFID);
+	RegConsoleCmd("sm_forumid", Command_ForumID);
 	
-	if (SQL_CheckConfig("xenforo"))
+	if (SQL_CheckConfig("forum"))
 	{
-		Database.Connect(OnSQLConnect, "xenforo");
+		Database.Connect(OnSQLConnect, "forum");
 	}
 	else
 	{
-		SetFailState("Can't found the entry \"xenforo\" in your databases.cfg!");
+		SetFailState("Can't found the entry \"forum\" in your databases.cfg!");
 		return;
 	}
 
-	CSetPrefix("{darkblue}[XenForo]{default}");
+	CSetPrefix("{darkblue}[Forum]{default}");
 }
 
-public Action Command_XFID(int client, int args)
+public Action Command_ForumID(int client, int args)
 {
 	if (g_iUserID[client] > 0)
 	{
-		CReplyToCommand(client, "Your XenForo ID is %d.", g_iUserID[client]);
+		CReplyToCommand(client, "Your Forum ID is %d.", g_iUserID[client]);
 	}
 	else
 	{
-		CReplyToCommand(client, "You don't have a XenForo ID.");
+		CReplyToCommand(client, "You don't have a Forum ID.");
 	}
 	return Plugin_Handled;
 }
@@ -112,8 +112,8 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 {
 	if (db == null)
 	{
-		LogError("[XenForo-API] (OnSQLConnect) SQL ERROR: Error connecting to database - '%s'", error);
-		SetFailState("[XenForo-API] (OnSQLConnect) Error connecting to \"xenforo\" database, please verify configurations & connections. (Check Error Logs)");
+		LogError("[Forum-API] (OnSQLConnect) SQL ERROR: Error connecting to database - '%s'", error);
+		SetFailState("[Forum-API] (OnSQLConnect) Error connecting to \"forum\" database, please verify configurations & connections. (Check Error Logs)");
 		return;
 	}
 	
@@ -122,12 +122,12 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 	g_bGroups = false;
 	g_bFields = false;
 
-	LoadXenForoGroups();
-	LoadXenForoUserFields();
+	LoadForumGroups();
+	LoadForumUserFields();
 	
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("XenForo API has connected to SQL successfully.");
+		LogMessage("Forum API has connected to SQL successfully.");
 	}
 }
 
@@ -194,7 +194,7 @@ public void SQL_GetUserId(Database db, DBResultSet results, const char[] error, 
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_GetUserId) Fail at Query: %s", error);
+		SetFailState("[Forum-API] (SQL_GetUserId) Fail at Query: %s", error);
 		return;
 	}
 	else
@@ -203,20 +203,20 @@ public void SQL_GetUserId(Database db, DBResultSet results, const char[] error, 
 		
 		if (client > 0 && !IsClientValid(client))
 		{
-			LogError("[XenForo-API] (SQL_GetUserId) Error grabbing User Data: Client invalid");
+			LogError("[Forum-API] (SQL_GetUserId) Error grabbing User Data: Client invalid");
 			return;
 		}
 		
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[XenForo-API] (SQL_GetUserId) Retrieving data for %N...", client);
+			LogMessage("[Forum-API] (SQL_GetUserId) Retrieving data for %N...", client);
 		}
 		
 		if (results.FetchRow())
 		{
 			if (results.IsFieldNull(0))
 			{
-				LogError("[XenForo-API] (SQL_GetUserId) Error retrieving User Data: (Field is null)");
+				LogError("[Forum-API] (SQL_GetUserId) Error retrieving User Data: (Field is null)");
 				return;
 			}
 			
@@ -230,7 +230,7 @@ public void SQL_GetUserId(Database db, DBResultSet results, const char[] error, 
 			
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("[XenForo-API] (SQL_GetUserId) User '%N' has been processed successfully!", client);
+				LogMessage("[Forum-API] (SQL_GetUserId) User '%N' has been processed successfully!", client);
 			}
 
 			char sQuery[256];
@@ -272,7 +272,7 @@ public void SQL_GetUserId(Database db, DBResultSet results, const char[] error, 
 		}
 		else
 		{
-			LogError("[XenForo-API] (SQL_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+			LogError("[Forum-API] (SQL_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
 		}
 	}
 }
@@ -281,7 +281,7 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_UserInformations) Fail at Query: %s", error);
+		SetFailState("[Forum-API] (SQL_UserInformations) Fail at Query: %s", error);
 		return;
 	}
 	else
@@ -290,20 +290,20 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 		
 		if (!IsClientValid(client))
 		{
-			LogError("[XenForo-API] (SQL_UserInformations) Error grabbing User informations: Client invalid");
+			LogError("[Forum-API] (SQL_UserInformations) Error grabbing User informations: Client invalid");
 			return;
 		}
 		
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[XenForo-API] (SQL_UserInformations) Retrieving informations for %N...", client);
+			LogMessage("[Forum-API] (SQL_UserInformations) Retrieving informations for %N...", client);
 		}
 		
 		if (results.FetchRow())
 		{
 			if (results.IsFieldNull(0))
 			{
-				LogError("[XenForo-API] (SQL_UserInformations) Error retrieving User informations: (Field is null)");
+				LogError("[Forum-API] (SQL_UserInformations) Error retrieving User informations: (Field is null)");
 				return;
 			}
 
@@ -336,12 +336,12 @@ public void SQL_UserInformations(Database db, DBResultSet results, const char[] 
 			
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("[XenForo-API] (SQL_UserInformations) User informations for'%N' has been processed successfully!", client);
+				LogMessage("[Forum-API] (SQL_UserInformations) User informations for'%N' has been processed successfully!", client);
 			}
 		}
 		else
 		{
-			LogError("[XenForo-API] (SQL_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+			LogError("[Forum-API] (SQL_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
 		}
 	}
 }
@@ -352,7 +352,7 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_UserFields) Fail at Query: %s", error);
+		SetFailState("[Forum-API] (SQL_UserFields) Fail at Query: %s", error);
 		delete pack;
 		return;
 	}
@@ -367,7 +367,7 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 		
 		if (!IsClientValid(client))
 		{
-			LogError("[XenForo-API] (SQL_UserFields) Error grabbing user fields: Client invalid");
+			LogError("[Forum-API] (SQL_UserFields) Error grabbing user fields: Client invalid");
 			return;
 		}
 
@@ -376,14 +376,14 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[XenForo-API] (SQL_UserFields) Retrieving user fields for %N...", client);
+			LogMessage("[Forum-API] (SQL_UserFields) Retrieving user fields for %N...", client);
 		}
 		
 		if (results.FetchRow())
 		{
 			if (results.IsFieldNull(0))
 			{
-				LogError("[XenForo-API] (SQL_UserFields) Error retrieving user fields: (Field is null)");
+				LogError("[Forum-API] (SQL_UserFields) Error retrieving user fields: (Field is null)");
 				return;
 			}
 
@@ -404,18 +404,18 @@ public void SQL_UserFields(Database db, DBResultSet results, const char[] error,
 
 				if (g_cDebug.BoolValue)
 				{
-					LogMessage("[XenForo-API] (SQL_UserFields) user fields for'%N' has been processed successfully!", client);
+					LogMessage("[Forum-API] (SQL_UserFields) user fields for'%N' has been processed successfully!", client);
 				}
 			}
 		}
 		else
 		{
-			LogError("[XenForo-API] (SQL_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+			LogError("[Forum-API] (SQL_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
 		}
 	}
 }
 
-void LoadXenForoUserFields()
+void LoadForumUserFields()
 {
 	delete g_smFields;
 	g_smFields = new StringMap();
@@ -426,7 +426,7 @@ void LoadXenForoUserFields()
 
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("SQL QUERY: LoadXenForoUserFields - Query: %s", sQuery);
+		LogMessage("SQL QUERY: LoadForumUserFields - Query: %s", sQuery);
 	}
 }
 
@@ -434,7 +434,7 @@ public void SQL_Fields(Database db, DBResultSet results, const char[] error, int
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_Fields) Fail at Query: %s", error);
+		SetFailState("[Forum-API] (SQL_Fields) Fail at Query: %s", error);
 		delete g_smFields;
 		return;
 	}
@@ -449,7 +449,7 @@ public void SQL_Fields(Database db, DBResultSet results, const char[] error, int
 
 				if (g_cDebug.BoolValue)
 				{
-					LogMessage("[XenForo-API] (SQL_Fields) Field ID: %s", sField);
+					LogMessage("[Forum-API] (SQL_Fields) Field ID: %s", sField);
 				}
 
 				char sTitle[128];
@@ -477,7 +477,7 @@ public void SQL_GetUserFieldPhrase(Database db, DBResultSet results, const char[
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-API] (SQL_GetUserFieldPhrase) Fail at Query: %s", error);
+		SetFailState("[Forum-API] (SQL_GetUserFieldPhrase) Fail at Query: %s", error);
 		delete pack;
 		return;
 	}
@@ -492,14 +492,14 @@ public void SQL_GetUserFieldPhrase(Database db, DBResultSet results, const char[
 
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[XenForo-API] (SQL_GetUserFieldPhrase) Retrieving phrase for user_field %s...", sField);
+			LogMessage("[Forum-API] (SQL_GetUserFieldPhrase) Retrieving phrase for user_field %s...", sField);
 		}
 		
 		if (results.FetchRow())
 		{
 			if (results.IsFieldNull(0))
 			{
-				LogError("[XenForo-API] (SQL_GetUserFieldPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
+				LogError("[Forum-API] (SQL_GetUserFieldPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
 				return;
 			}
 
@@ -510,29 +510,29 @@ public void SQL_GetUserFieldPhrase(Database db, DBResultSet results, const char[
 
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("[XenForo-API] (SQL_GetUserFieldPhrase) Added user_field %s (Name: %s)", sField, sPhrase);
+				LogMessage("[Forum-API] (SQL_GetUserFieldPhrase) Added user_field %s (Name: %s)", sField, sPhrase);
 			}
 		}
 	}
 }
 
-void LoadXenForoGroups()
+void LoadForumGroups()
 {
 	char sQuery[256];
 	Format(sQuery, sizeof(sQuery), "SELECT user_group_id, title, banner_text FROM xf_user_group");
-	g_dDatabase.Query(SQL_GetXenForoGroups, sQuery);
+	g_dDatabase.Query(SQL_GetForumGroups, sQuery);
 
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("SQL QUERY: LoadXenForoGroups - Query: %s", sQuery);
+		LogMessage("SQL QUERY: LoadForumGroups - Query: %s", sQuery);
 	}
 }
 
-public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] error, any data)
+public int SQL_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
 {
 	if (db == null)
 	{
-		LogError("[XenForo-API] (SQL_GetXenForoGroups) Query error by void: '%s'", error);
+		LogError("[Forum-API] (SQL_GetForumGroups) Query error by void: '%s'", error);
 		return;
 	}
 	else
@@ -560,7 +560,7 @@ public int SQL_GetXenForoGroups(Database db, DBResultSet results, const char[] e
 
 				if (g_cDebug.BoolValue)
 				{
-					LogMessage("[XenForo-API] (SQL_GetXenForoGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
+					LogMessage("[Forum-API] (SQL_GetForumGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
 				}
 
 				g_smGroups.SetString(sKey, sName);
@@ -657,14 +657,14 @@ public int Native_TExecute(Handle plugin, int numParams)
 	DBPriority prio = GetNativeCell(2);
 	
 	g_dDatabase.Query(SQL_EmptyCallback, sQuery, 0, prio);
-	LogError("[XenForo-API] (Native_TExecute) SQL QUERY: XenForo_TExecute - Query: '%s'", sQuery);
+	LogError("[Forum-API] (Native_TExecute) SQL QUERY: Forum_TExecute - Query: '%s'", sQuery);
 }
 
 public int SQL_EmptyCallback(Database db, DBResultSet results, const char[] error, any data)
 {
 	if (db == null)
 	{
-		LogError("[XenForo-API] (SQL_EmptyCallback) Query error by void: '%s'", error);
+		LogError("[Forum-API] (SQL_EmptyCallback) Query error by void: '%s'", error);
 		return;
 	}
 }

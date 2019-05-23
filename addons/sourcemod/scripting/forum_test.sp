@@ -2,12 +2,12 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <xenforo_api>
-#include <xenforo_credits>
+#include <forum_api>
+#include <forum_credits>
 
 public Plugin myinfo = 
 {
-    name = "Xenforo - Test",
+    name = "Forum - Test",
     author = "Bara", 
     description = "",
     version = "1.0.0", 
@@ -16,24 +16,24 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_xftest", Command_XFTest);
+    RegConsoleCmd("sm_forumtest", Command_ForumTest);
 }
 
-public void XF_OnConnected()
+public void Forum_OnConnected()
 {
-    PrintToChatAll("XF_OnConnected executed");
+    PrintToChatAll("Forum_OnConnected executed");
 }
 
-public void XF_OnProcessed(int client, int xf_userid)
+public void Forum_OnProcessed(int client, int forum_userid)
 {
-    PrintToChat(client, "Your XF UserID: %d", xf_userid);
+    PrintToChat(client, "Your Forum UserID: %d", forum_userid);
 }
 
-public void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
+public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
 {
-    PrintToChat(client, "Your XF UserID: %d", XenForo_GetClientID(client));
-    PrintToChat(client, "Your XF Name: %s", name);
-    PrintToChat(client, "Your XF Primary Group: %d", primarygroup);
+    PrintToChat(client, "Your Forum UserID: %d", Forum_GetClientID(client));
+    PrintToChat(client, "Your Forum Name: %s", name);
+    PrintToChat(client, "Your Forum Primary Group: %d", primarygroup);
 
     char sList[64];
 
@@ -44,13 +44,13 @@ public void XF_OnInfoProcessed(int client, const char[] name, int primarygroup, 
         PrintToChat(client, "Secondary Group added: %d", secondarygroups.Get(i));
     }
 
-    PrintToChat(client, "Your XF Secondary Groups: %s", sList);
+    PrintToChat(client, "Your Forum Secondary Groups: %s", sList);
 }
 
-public void XF_OnUserFieldsProcessed(int client, StringMap userfields)
+public void Forum_OnUserFieldsProcessed(int client, StringMap userfields)
 {
     StringMapSnapshot smSnapshot = userfields.Snapshot();
-    StringMap smFields = XenForo_GetUserFields();
+    StringMap smFields = Forum_GetUserFields();
     char sKey[32], sValue[128], sPhrase[64];
 
     for (int i = 0; i < smSnapshot.Length; i++)
@@ -65,32 +65,32 @@ public void XF_OnUserFieldsProcessed(int client, StringMap userfields)
     delete smSnapshot;
 }
 
-public void XF_OnCreditsUpdate(int client, bool add, int credits, int newCredits)
+public void Forum_OnCreditsUpdate(int client, bool add, int credits, int newCredits)
 {
-    PrintToChat(client, "Your XF Credits: %d", newCredits);
+    PrintToChat(client, "Your Forum Credits: %d", newCredits);
 }
 
-public Action Command_XFTest(int client, int args)
+public Action Command_ForumTest(int client, int args)
 {
-    PrintToChat(client, "Your XF UserID: %d", XenForo_GetClientID(client));
+    PrintToChat(client, "Your Forum UserID: %d", Forum_GetClientID(client));
 
     char sName[128];
-    XenForo_GetClientName(client, sName);
-    PrintToChat(client, "Your XF Name: %s", sName);
+    Forum_GetClientName(client, sName);
+    PrintToChat(client, "Your Forum Name: %s", sName);
 
-    ArrayList aArray = XenForo_GetClientSecondaryGroups(client);
+    ArrayList aArray = Forum_GetClientSecondaryGroups(client);
 
     char sList[64];
 
-    StringMap smGroups = XenForo_GetGroupList();
-    StringMap smGroupbanner = XenForo_GetGroupBannerText();
+    StringMap smGroups = Forum_GetGroupList();
+    StringMap smGroupbanner = Forum_GetGroupBannerText();
 
     char sGroup[64], sBanner[32], sKey[12];
-    IntToString(XenForo_GetClientPrimaryGroup(client), sKey, sizeof(sKey));
+    IntToString(Forum_GetClientPrimaryGroup(client), sKey, sizeof(sKey));
     smGroups.GetString(sKey, sGroup, sizeof(sGroup));
     smGroupbanner.GetString(sKey, sBanner, sizeof(sBanner));
 
-    PrintToChat(client, "Your XF Primary Group: %d (Name: %s, Banner: %s)", XenForo_GetClientPrimaryGroup(client), sGroup, sBanner);
+    PrintToChat(client, "Your Forum Primary Group: %d (Name: %s, Banner: %s)", Forum_GetClientPrimaryGroup(client), sGroup, sBanner);
 
     for (int i = 0; i < aArray.Length; i++)
     {
@@ -103,11 +103,11 @@ public Action Command_XFTest(int client, int args)
         PrintToChat(client, "Secondary Group added: %d (Name: %s, Banner: %s)", aArray.Get(i), sGroup, sBanner);
     }
 
-    PrintToChat(client, "Your XF Secondary Groups: %s", sList);
-    PrintToChat(client, "Your XF Credits: %d", XenForo_GetClientCredits(client));
+    PrintToChat(client, "Your Forum Secondary Groups: %s", sList);
+    PrintToChat(client, "Your Forum Credits: %d", Forum_GetClientCredits(client));
 
-    StringMap smFields = XenForo_GetUserFields();
-    StringMap smUserFields = XenForo_GetClientUserFields(client);
+    StringMap smFields = Forum_GetUserFields();
+    StringMap smUserFields = Forum_GetClientUserFields(client);
     StringMapSnapshot smSnapshot = smUserFields.Snapshot();
     
     char sFieldKey[32], sFieldValue[128], sFieldPhrase[64];
