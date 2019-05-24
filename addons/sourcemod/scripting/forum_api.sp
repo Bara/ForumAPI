@@ -77,7 +77,7 @@ public void OnPluginStart()
     AutoExecConfig_SetCreateDirectory(true);
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("forum_api");
-    g_cForum = AutoExecConfig_CreateConVar("forum_api_forum", "0", "Which forum software do you run? (0 - XenForo, 1 - Invision)", _, true, 0.0, true, 1.0);
+    g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision)", _, true, 0.0, true, 2.0);
     g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
@@ -102,9 +102,14 @@ public Action Command_ForumID(int client, int args)
 
 public void OnConfigsExecuted()
 {
-    if (SQL_CheckConfig("forum"))
+    if (SQL_CheckConfig("forum") && g_cForum.IntValue > 1)
     {
         Database.Connect(OnSQLConnect, "forum");
+    }
+    else if (g_cForum.IntValue == 0)
+    {
+        SetFailState("forum_api_software is 0. Please choose your forum software and update forum_api_software.");
+        return;
     }
     else
     {
@@ -127,10 +132,15 @@ public void OnSQLConnect(Database db, const char[] error, any data)
     g_bGroups = false;
     g_bFields = false;
 
-    if (g_cForum.IntValue == 0)
+    if (g_cForum.IntValue == 1)
     {
         XenForo_LoadForumGroups();
         XenForo_LoadForumUserFields();
+    }
+    else
+    {
+        SetFailState("forum_api_software has an unknown value (%d). Please choose your forum software and update forum_api_software.", g_cForum.IntValue);
+        return;
     }
     
     if (g_cDebug.BoolValue)
@@ -188,7 +198,7 @@ public void OnClientPostAdminCheck(int client)
     char sCommunityID[32];
     GetClientAuthId(client, AuthId_SteamID64, sCommunityID, sizeof(sCommunityID));
     
-    if(g_cForum.IntValue == 0)
+    if(g_cForum.IntValue == 1)
     {
         XenForo_LoadClient(client, sCommunityID);
     }
