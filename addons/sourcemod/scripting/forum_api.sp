@@ -16,13 +16,6 @@ Handle g_hOnInfoProcessed = null;
 Handle g_hOnUserFieldsProcessed = null;
 Handle g_hOnConnected = null;
 
-char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
-int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
-ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
-char g_sCustomTitle[MAXPLAYERS + 1];
-StringMap g_smUserFields[MAXPLAYERS + 1] = { null, ... };
-int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
-
 StringMap g_smGroups = null;
 StringMap g_smGroupBanner = null;
 StringMap g_smFields = null;
@@ -30,8 +23,18 @@ StringMap g_smFields = null;
 bool g_bGroups = false;
 bool g_bFields = false;
 
-bool g_bIsProcessed[MAXPLAYERS + 1] = { false, ... };
+int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
+int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
 int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
+
+bool g_bIsProcessed[MAXPLAYERS + 1] = { false, ... };
+
+ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
+
+StringMap g_smUserFields[MAXPLAYERS + 1] = { null, ... };
+
+char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
+char g_sCustomTitle[MAXPLAYERS + 1];
 
 #include "forum_api/xenforo.sp"
 
