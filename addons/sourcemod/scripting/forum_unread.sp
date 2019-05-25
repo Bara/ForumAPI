@@ -16,6 +16,8 @@ int g_iConversations[MAXPLAYERS + 1] = { -1, ... };
 
 Database g_dDB = null;
 
+ConVar g_cDebug = null;
+
 public Plugin myinfo = 
 {
 	name = "Forum - Post unread alerts and conversations",
@@ -45,6 +47,8 @@ public void OnPluginStart()
 public void Forum_OnConnected()
 {
 	g_dDB = Forum_GetDatabase();
+
+	g_cDebug = FindConVar("forum_api_debug");
 }
 
 public void OnClientPutInServer(int client)
@@ -55,6 +59,11 @@ public void OnClientPutInServer(int client)
 
 public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
 {
+	if (g_cDebug.BoolValue)
+	{
+		LogMessage("[Forum-Unread) (Forum_OnInfoProcessed) Executed");
+	}
+
 	CreateTimer(g_cInterval.FloatValue * 60.0, Timer_UpdateUnreadCount, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -64,6 +73,11 @@ public Action Timer_UpdateUnreadCount(Handle timer, int userid)
 
 	if (client > 0 && !IsFakeClient(client) && IsClientInGame(client))
 	{
+		if (g_cDebug.BoolValue)
+		{
+			LogMessage("[Forum-Unread) (Forum_OnInfoProcessed) Timer_UpdateUnreadCount and valid Client");
+		}
+	
 		UpdateUnreadCount(client);
 	}
 }
@@ -73,8 +87,31 @@ void UpdateUnreadCount(int client)
 	int iUserID = Forum_GetClientID(client);
 
 	char sQuery[512];
-	Format(sQuery, sizeof(sQuery), "SELECT conversations_unread, alerts_unread FROM xf_user WHERE user_id = '%d'", iUserID);
-	g_dDB.Query(SQL_GetUnreadStuff, sQuery, GetClientUserId(client));
+
+	ConVar cForum = FindConVar("forum_api_software");
+
+	if (g_cDebug.BoolValue)
+	{
+		LogMessage("[Forum-Unread) (UpdateUnreadCount) cForum: %d", cForum.IntValue);
+	}
+
+	if (cForum != null && cForum.IntValue > 0)
+	{
+		if (cForum.IntValue == 1)
+		{
+			Format(sQuery, sizeof(sQuery), "SELECT conversations_unread, alerts_unread FROM xf_user WHERE user_id = '%d'", iUserID);
+		}
+		else if (cForum.IntValue == 2)
+		{
+			Format(sQuery, sizeof(sQuery), "SELECT msg_count_new, notification_cnt FROM core_members WHERE member_id = '%d'", iUserID);
+		}
+		else
+		{
+			return;
+		}
+
+		g_dDB.Query(SQL_GetUnreadStuff, sQuery, GetClientUserId(client));
+	}
 }
 
 public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] error, any data)
@@ -91,8 +128,8 @@ public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] er
 		{
 			if (results.RowCount > 0 && results.FetchRow())
 			{
-				g_iAlerts[client] = results.FetchInt(0);
-				g_iConversations[client] = results.FetchInt(1);
+				g_iConversations[client] = results.FetchInt(0);
+				g_iAlerts[client] = results.FetchInt(1);
 
 				PostUnreadStuff(client);
 			}

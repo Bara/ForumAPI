@@ -28,6 +28,7 @@ int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
 int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
 
 bool g_bIsProcessed[MAXPLAYERS + 1] = { false, ... };
+bool g_bLoaded = false;
 
 ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
 
@@ -37,6 +38,7 @@ char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
 char g_sCustomTitle[MAXPLAYERS + 1];
 
 #include "forum_api/xenforo.sp"
+#include "forum_api/invision.sp"
 
 public Plugin myinfo = 
 {
@@ -105,7 +107,7 @@ public Action Command_ForumID(int client, int args)
 
 public void OnConfigsExecuted()
 {
-    if (SQL_CheckConfig("forum") && g_cForum.IntValue > 1)
+    if (SQL_CheckConfig("forum") && g_cForum.IntValue > 0)
     {
         Database.Connect(OnSQLConnect, "forum");
     }
@@ -131,33 +133,48 @@ public void OnSQLConnect(Database db, const char[] error, any data)
     }
     
     g_dDatabase = db;
+    
+    if (g_cDebug.BoolValue)
+    {
+        LogMessage("[Forum-API] (OnSQLConnect) MySQL connection has been established!");
+    }
 
     g_bGroups = false;
     g_bFields = false;
 
     if (g_cForum.IntValue == 1)
     {
-        XenForo_LoadForumGroups();
-        XenForo_LoadForumUserFields();
+        XenForo_LoadGroups();
+        XenForo_LoadUserFields();
+    }
+    else if (g_cForum.IntValue == 2)
+    {
+        Invision_LoadGroups();
+        Invision_LoadUserFields();
     }
     else
     {
         SetFailState("forum_api_software has an unknown value (%d). Please choose your forum software and update forum_api_software.", g_cForum.IntValue);
         return;
     }
-    
-    if (g_cDebug.BoolValue)
-    {
-        LogMessage("Forum API has connected to SQL successfully.");
-    }
 }
 
 void LoadClients()
 {
+    LogMessage("[Forum-API] (LoadClients) Groups: %d, Fields: %d", g_bGroups, g_bFields);
+
     if (!g_bGroups || !g_bFields)
     {
         return;
     }
+
+    
+    if (g_bLoaded)
+    {
+        return;
+    }
+
+    g_bLoaded = true;
 
     Call_StartForward(g_hOnConnected);
     Call_Finish();
@@ -179,9 +196,11 @@ void LoadClients()
 public void OnClientConnected(int client)
 {
     g_bIsProcessed[client] = false;
+    
     g_iUserID[client] = -1;
     g_iPrimaryGroup[client] = -1;
     g_iFieldCount[client] = -1;
+
     delete g_aSecondaryGroups[client];
     delete g_smUserFields[client];
 }
@@ -204,6 +223,10 @@ public void OnClientPostAdminCheck(int client)
     if(g_cForum.IntValue == 1)
     {
         XenForo_LoadClient(client, sCommunityID);
+    }
+    else if (g_cForum.IntValue == 2)
+    {
+        Invision_LoadClient(client, sCommunityID);
     }
 }
 

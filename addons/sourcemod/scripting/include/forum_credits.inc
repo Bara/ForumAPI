@@ -27,7 +27,7 @@ public SharedPlugin __pl_forum_credits =
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_forum_credits_SetNTVOptional()
+public void __pl_forum_credits_SetNTVOptional()
 {
 	MarkNativeAsOptional("Forum_GetClientCredits");
 	MarkNativeAsOptional("Forum_AddClientCredits");

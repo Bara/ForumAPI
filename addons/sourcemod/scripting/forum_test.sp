@@ -3,7 +3,11 @@
 
 #include <sourcemod>
 #include <forum_api>
+
+#undef REQUIRE_PLUGIN
 #include <forum_credits>
+
+bool g_bCredits = false;
 
 public Plugin myinfo = 
 {
@@ -17,6 +21,24 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
     RegConsoleCmd("sm_forumtest", Command_ForumTest);
+
+    g_bCredits = LibraryExists("forum_credits");
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+    if (StrEqual(name, "forum_credits"))
+    {
+        g_bCredits = true;
+    }
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+    if (StrEqual(name, "forum_credits"))
+    {
+        g_bCredits = false;
+    }
 }
 
 public void Forum_OnConnected()
@@ -104,7 +126,11 @@ public Action Command_ForumTest(int client, int args)
     }
 
     PrintToChat(client, "Your Forum Secondary Groups: %s", sList);
-    PrintToChat(client, "Your Forum Credits: %d", Forum_GetClientCredits(client));
+    
+    if (g_bCredits)
+    {
+        PrintToChat(client, "Your Forum Credits: %d", Forum_GetClientCredits(client));
+    }
 
     StringMap smFields = Forum_GetUserFields();
     StringMap smUserFields = Forum_GetClientUserFields(client);

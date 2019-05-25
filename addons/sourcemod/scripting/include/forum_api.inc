@@ -192,7 +192,7 @@ public SharedPlugin __pl_forum_api =
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_forum_api_SetNTVOptional()
+public void __pl_forum_api_SetNTVOptional()
 {
 	MarkNativeAsOptional("Forum_GetClientID");
 	MarkNativeAsOptional("Forum_GetClientPrimaryGroup");

@@ -1,4 +1,4 @@
-void XenForo_LoadForumGroups()
+void XenForo_LoadGroups()
 {
     char sQuery[256];
     Format(sQuery, sizeof(sQuery), "SELECT user_group_id, title, banner_text FROM xf_user_group");
@@ -6,7 +6,7 @@ void XenForo_LoadForumGroups()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("SQL QUERY: XenForo_LoadForumGroups - Query: %s", sQuery);
+        LogMessage("[Forum-API] (XenForo_LoadGroups) Query: %s", sQuery);
     }
 }
 
@@ -59,7 +59,7 @@ public int XenForo_GetForumGroups(Database db, DBResultSet results, const char[]
     }
 }
 
-void XenForo_LoadForumUserFields()
+void XenForo_LoadUserFields()
 {
     delete g_smFields;
     g_smFields = new StringMap();
@@ -70,7 +70,7 @@ void XenForo_LoadForumUserFields()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("SQL QUERY: XenForo_LoadForumUserFields - Query: %s", sQuery);
+        LogMessage("[Forum-API] (XenForo_LoadUserFields) Query: %s", sQuery);
     }
 }
 
@@ -107,7 +107,7 @@ public void XenForo_Fields(Database db, DBResultSet results, const char[] error,
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("SQL QUERY: XenForo_Fields - Query: %s", sQuery);
+                    LogMessage("[Forum-API] (XenForo_Fields) Query: %s", sQuery);
                 }
             }
 
@@ -168,7 +168,7 @@ void XenForo_LoadClient(int client, const char[] sCommunityID)
     
     if (g_cDebug.BoolValue)
     {
-        LogMessage("SQL QUERY: XenForo_LoadClient - Query: %s", sQuery);
+        LogMessage("[Forum-API] (XenForo_LoadClient) Query: %s", sQuery);
     }
 }
 
@@ -221,7 +221,7 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
 
             if (g_cDebug.BoolValue)
             {
-                LogMessage("SQL QUERY: XenForo_GetUserId - User Informations - Query: %s", sQuery);
+                LogMessage("[Forum-API] (XenForo_GetUserId) - User Informations - Query: %s", sQuery);
             }
 
             StringMapSnapshot smFields = g_smFields.Snapshot();
@@ -246,7 +246,7 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("SQL QUERY: XenForo_GetUserId - User Fields - Query: %s", sQuery);
+                    LogMessage("[Forum-API] (XenForo_GetUserId) - User Fields - Query: %s", sQuery);
                 }
             }
 
@@ -356,7 +356,7 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
 
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (XenForo_UserFields) Retrieving user fields for %N...", client);
+            LogMessage("[Forum-API] (XenForo_UserFields) Retrieving user field %s for %N...", sKey, client);
         }
         
         if (results.FetchRow())
