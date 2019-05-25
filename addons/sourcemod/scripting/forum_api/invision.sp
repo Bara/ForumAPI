@@ -13,7 +13,7 @@ void Invision_LoadGroups()
 
 public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] error, any data)
 {
-    if (db == null)
+    if (db == null || strlen(error) > 0)
     {
         LogError("[Forum-API] (Invision_GetGroupIDs) Query error by void: '%s'", error);
         return;
@@ -51,7 +51,7 @@ public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] e
 
 public int Invision_GetGroupNames(Database db, DBResultSet results, const char[] error, int groupid)
 {
-    if (db == null)
+    if (db == null || strlen(error) > 0)
     {
         LogError("[Forum-API] (Invision_GetGroupNames) Query error by void: '%s'", error);
         return;
@@ -104,7 +104,7 @@ void Invision_LoadUserFields()
 
 public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char[] error, any data)
 {
-    if (db == null)
+    if (db == null || strlen(error) > 0)
     {
         LogError("[Forum-API] (Invision_GetUserFieldIDs) Query error by void: '%s'", error);
         delete g_smFields;
@@ -140,7 +140,7 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
 
 public int Invision_GetUserFieldNames(Database db, DBResultSet results, const char[] error, any data)
 {
-    if (db == null)
+    if (db == null || strlen(error) > 0)
     {
         LogError("[Forum-API] (Invision_GetUserFieldNames) Query error by void: '%s'", error);
         return;

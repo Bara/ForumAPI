@@ -12,7 +12,7 @@ void XenForo_LoadGroups()
 
 public int XenForo_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
 {
-    if (db == null)
+    if (db == null || strlen(error) > 0)
     {
         LogError("[Forum-API] (XenForo_GetForumGroups) Query error by void: '%s'", error);
         return;
