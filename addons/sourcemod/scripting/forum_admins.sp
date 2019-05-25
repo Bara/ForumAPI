@@ -66,8 +66,6 @@ public void OnRebuildAdminCache(AdminCachePart part)
 	{
 		SetAllAdmin();
 	}
-
-	if (g_bLoaded) {}
 }
 
 void SetAllAdmin()
