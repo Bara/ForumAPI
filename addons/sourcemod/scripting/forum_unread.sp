@@ -30,10 +30,15 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	LoadTranslations("common.phrases");
+
+	if (Forum_IsConnected())
+	{
+		g_dDB = Forum_GetDatabase();
+	}
 	
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
-	AutoExecConfig_SetFile("forum_admins");
+	AutoExecConfig_SetFile("forum_unread");
 	g_cInterval = AutoExecConfig_CreateConVar("forum_post_interval", "1", "Check in minutes that post an update of unread stuff.", _, true, 1.0);
 	g_cHomepage = AutoExecConfig_CreateConVar("forum_post_unread_url", "example.com", "Homepage url to your forum.");
 	g_cAlerts = AutoExecConfig_CreateConVar("forum_post_unread_alerts", "1", "Print every X minutes a message with the amount of unread alerts", _, true, 0.0, true, 1.0);
