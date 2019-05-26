@@ -14,9 +14,13 @@ int g_iCredits[MAXPLAYERS + 1] = { -1, ... };
 
 Handle g_hOnCreditsUpdate = null;
 
+ConVar g_cTable = null;
 ConVar g_cColumn = null;
+ConVar g_cUserColumn = null;
 
+char g_sTable[64];
 char g_sColumn[64];
+char g_sUserColumn[64];
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -52,12 +56,19 @@ public void OnPluginStart()
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
 	AutoExecConfig_SetFile("forum_credits");
+	g_cTable = AutoExecConfig_CreateConVar("forum_credits_table", "xf_user", "Name of the table, where the credits are saved.");
 	g_cColumn = AutoExecConfig_CreateConVar("forum_credits_column", "dbtech_credits", "Name of the column for reading and writing the players credits.");
+	g_cUserColumn = AutoExecConfig_CreateConVar("forum_credits_user_column", "user_id", "Name of the column to find the correct member/user id.");
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
+	g_cTable.GetString(g_sColumn, sizeof(g_sColumn));
 	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cUserColumn.GetString(g_sColumn, sizeof(g_sColumn));
+
+	g_cTable.AddChangeHook(CVar_OnChange);
 	g_cColumn.AddChangeHook(CVar_OnChange);
+	g_cUserColumn.AddChangeHook(CVar_OnChange);
 
 	CSetPrefix("{darkblue}[Forum]{default}");
 
@@ -71,9 +82,17 @@ public void OnClientDisconnect(int client)
 
 public void CVar_OnChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if (convar == g_cColumn)
+	if (convar == g_cTable)
+	{
+		g_cTable.GetString(g_sTable, sizeof(g_sTable));
+	}
+	else if (convar == g_cColumn)
 	{
 		g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	}
+	else if (convar == g_cUserColumn)
+	{
+		g_cUserColumn.GetString(g_sUserColumn, sizeof(g_sUserColumn));
 	}
 }
 
@@ -162,7 +181,7 @@ void GetClientCredits(int client)
 	if (iUserID > 0)
 	{
 		char sQuery[256];
-		Format(sQuery, sizeof(sQuery), "SELECT %s FROM xf_user WHERE user_id = %d;", g_sColumn, iUserID);
+		Format(sQuery, sizeof(sQuery), "SELECT \"%s\" FROM \"%s\" WHERE \"%s\" = %d;", g_sColumn, g_sTable, g_sUserColumn, iUserID);
 		g_dDB.Query(SQL_GetClientCredits, sQuery, GetClientUserId(client));
 	}
 }
@@ -230,7 +249,7 @@ public int Native_AddClientCredits(Handle plugin, int numParams)
 	}
 
 	char sQuery[512];
-	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE xf_user SET %s = %s + '%d' WHERE user_id = '%d';", g_sColumn, g_sColumn, iUserID);
+	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE \"%s\" SET \"%s\" = \"%s\" + '%d' WHERE \"%s\" = '%d';", g_sTable, g_sColumn, g_sColumn, g_sUserColumn, iUserID);
 
 	DataPack pack = new DataPack();
 	pack.WriteCell(GetClientUserId(client));
@@ -258,7 +277,7 @@ public int Native_RemoveClientCredits(Handle plugin, int numParams)
 	}
 
 	char sQuery[512];
-	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE xf_user SET %s = %s - '%d' WHERE user_id = '%d';", g_sColumn, g_sColumn, iUserID);
+	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE \"%s\" SET \"%s\" = \"%s\" - '%d' WHERE \"%s\" = '%d';", g_sTable, g_sColumn, g_sColumn, g_sUserColumn, iUserID);
 
 	DataPack pack = new DataPack();
 	pack.WriteCell(GetClientUserId(client));
