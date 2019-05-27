@@ -46,7 +46,7 @@ public void OnPluginStart()
 
 public void OnConfigsExecuted()
 {
-	g_bLoaded = LoadGroups();
+	g_bLoaded = LoadGroups(true);
 
 	g_cDebug = FindConVar("forum_api_debug");
 }
@@ -68,35 +68,27 @@ public void OnRebuildAdminCache(AdminCachePart part)
 	}
 }
 
-void SetAllAdmin()
+void SetAllAdmin(bool skip = false)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && Forum_IsProcessed(i))
 		{
-			SetAdmin(i);
+			SetAdmin(i, skip);
 		}
 	}
 }
 
-void SetAdmin(int client)
+void SetAdmin(int client, bool skip = false)
 {
-	if (!g_bLoaded)
+	if (!skip && !g_bLoaded)
 	{
 		LogError("[Forum-Admins] (SetAdmin) Admin groups not loaded!");
 		LateLoadAdminCall(client);
 		return;
 	}
 
-	char sAuth[32];
-	if (!GetClientAuthId(client, AuthId_Steam2, sAuth, sizeof(sAuth)))
-	{
-		LogError("[Forum-Admins] (SetAdmin) Can't get auth id for client: %d", client);
-		LateLoadAdminCall(client);
-		return;
-	}
-
-	AdminId aAdmin = FindAdminByIdentity(sAuth, AUTHMETHOD_STEAM);
+	AdminId aAdmin = GetUserAdmin(client);
 
 	if (aAdmin == INVALID_ADMIN_ID)
 	{
@@ -105,23 +97,12 @@ void SetAdmin(int client)
 			LogMessage("[Forum-Admins] (SetAdmin) Admin ID was invalid, let's create admin...");
 		}
 
-		char sName[MAX_NAME_LENGTH];
+		aAdmin = CreateAdmin();
+		SetUserAdmin(client, aAdmin);
 
-		if (!GetClientName(client, sName, sizeof(sName)))
-		{
-			LogError("[Forum-Admins] (SetAdmin) Can't get name for client: %d", client);
-			LateLoadAdminCall(client);
-			return;
-		}
-
-		TrimString(sName);
-		StripQuotes(sName);
-
-		aAdmin = CreateAdmin(sName);
-		BindAdminIdentity(aAdmin, AUTHMETHOD_STEAM, sAuth);
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admins] (SetAdmin) Admin created. (Admin ID: %d, Auth: %s)", aAdmin, sAuth);
+			LogMessage("[Forum-Admins] (SetAdmin) Admin created. (Admin ID: %d)", aAdmin);
 		}
 	}
 
@@ -172,10 +153,10 @@ void LateLoadAdminCall(int client)
 
 public Action Command_ReloadGroups(int client, int args)
 {
-	LoadGroups();
+	LoadGroups(true);
 }
 
-bool LoadGroups()
+bool LoadGroups(bool reloadPlayers = false)
 {
 	if (!Forum_IsConnected())
 	{
@@ -300,6 +281,11 @@ bool LoadGroups()
 		gGroup = INVALID_GROUP_ID;
 
 	} while (kvConfig.GotoNextKey(false));
+
+	if (reloadPlayers)
+	{
+		SetAllAdmin(true);
+	}
 
 	return true;
 }
