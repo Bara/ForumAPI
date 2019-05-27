@@ -17,6 +17,7 @@ int g_iConversations[MAXPLAYERS + 1] = { -1, ... };
 Database g_dDB = null;
 
 ConVar g_cDebug = null;
+ConVar g_cForum = null;
 
 public Plugin myinfo = 
 {
@@ -54,6 +55,7 @@ public void Forum_OnConnected()
 	g_dDB = Forum_GetDatabase();
 
 	g_cDebug = FindConVar("forum_api_debug");
+	g_cForum = FindConVar("forum_api_software");
 }
 
 public void OnClientPutInServer(int client)
@@ -93,25 +95,28 @@ void UpdateUnreadCount(int client)
 
 	char sQuery[512];
 
-	ConVar cForum = FindConVar("forum_api_software");
-
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("[Forum-Unread) (UpdateUnreadCount) cForum: %d", cForum.IntValue);
+		LogMessage("[Forum-Unread) (UpdateUnreadCount) g_cForum: %d", g_cForum.IntValue);
 	}
 
-	if (cForum != null && cForum.IntValue > 0)
+	if (g_cForum != null && g_cForum.IntValue > 0)
 	{
-		if (cForum.IntValue == 1)
+		if (g_cForum.IntValue == 1)
 		{
 			Format(sQuery, sizeof(sQuery), "SELECT conversations_unread, alerts_unread FROM xf_user WHERE user_id = '%d'", iUserID);
 		}
-		else if (cForum.IntValue == 2)
+		else if (g_cForum.IntValue == 2)
 		{
 			Format(sQuery, sizeof(sQuery), "SELECT msg_count_new, notification_cnt FROM core_members WHERE member_id = '%d'", iUserID);
 		}
+		else if (g_cForum.IntValue == 3)
+		{
+			Format(sQuery, sizeof(sQuery), "SELECT unreadpms FROM mybb_users WHERE uid = '%d'", iUserID);
+		}
 		else
 		{
+			SetFailState("[Forum-Unread] forum_api_software has an invalid value or unsupported forum software");
 			return;
 		}
 
@@ -134,7 +139,11 @@ public void SQL_GetUnreadStuff(Database db, DBResultSet results, const char[] er
 			if (results.RowCount > 0 && results.FetchRow())
 			{
 				g_iConversations[client] = results.FetchInt(0);
-				g_iAlerts[client] = results.FetchInt(1);
+				
+				if (g_cForum.IntValue != 3)
+				{
+					g_iAlerts[client] = results.FetchInt(1);
+				}
 
 				PostUnreadStuff(client);
 			}
@@ -152,12 +161,12 @@ void PostUnreadStuff(int client)
 	char sURL[64];
 	g_cHomepage.GetString(sURL, sizeof(sURL));
 
-	if (g_cAlerts.BoolValue)
+	if (g_cAlerts.BoolValue && g_iAlerts[client] > -1)
 	{
 		CPrintToChat(client, "You've %d unread alerts on %s", g_iAlerts[client], sURL);
 	}
 
-	if (g_cConversations.BoolValue)
+	if (g_cConversations.BoolValue && g_iConversations[client] > -1)
 	{
 		CPrintToChat(client, "You've %d unread conversations on %s", g_iConversations[client], sURL);
 	}
