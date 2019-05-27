@@ -39,6 +39,7 @@ char g_sCustomTitle[MAXPLAYERS + 1];
 
 #include "forum_api/xenforo.sp"
 #include "forum_api/invision.sp"
+#include "forum_api/mybb.sp"
 
 public Plugin myinfo = 
 {
@@ -56,6 +57,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("Forum_GetClientCustomTitle", Native_GetClientCustomTitle);
     CreateNative("Forum_GetClientPrimaryGroup", Native_GetClientPrimaryGroup);
     CreateNative("Forum_GetClientSecondaryGroups", Native_GetClientSecondaryGroups);
+    
     CreateNative("Forum_IsProcessed", Native_IsProcessed);
     CreateNative("Forum_TExecute", Native_TExecute);
     CreateNative("Forum_IsConnected", Native_IsConnected);
@@ -82,7 +84,7 @@ public void OnPluginStart()
     AutoExecConfig_SetCreateDirectory(true);
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("forum_api");
-    g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision)", _, true, 0.0, true, 2.0);
+    g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision, 3 - MyBB)", _, true, 0.0, true, 3.0);
     g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
@@ -107,18 +109,21 @@ public Action Command_ForumID(int client, int args)
 
 public void OnConfigsExecuted()
 {
-    if (SQL_CheckConfig("forum") && g_cForum.IntValue > 0)
+    if (g_cForum.IntValue > 0)
     {
-        Database.Connect(OnSQLConnect, "forum");
-    }
-    else if (g_cForum.IntValue == 0)
-    {
-        SetFailState("forum_api_software is 0. Please choose your forum software and update forum_api_software.");
-        return;
+        if (SQL_CheckConfig("forum"))
+        {
+            Database.Connect(OnSQLConnect, "forum");
+        }
+        else
+        {
+            SetFailState("Can't found the entry \"forum\" in your databases.cfg!");
+            return;
+        }
     }
     else
     {
-        SetFailState("Can't found the entry \"forum\" in your databases.cfg!");
+        SetFailState("forum_api_software is 0. Please choose your forum software and update forum_api_software.");
         return;
     }
 }
@@ -151,6 +156,11 @@ public void OnSQLConnect(Database db, const char[] error, any data)
     {
         Invision_LoadGroups();
         Invision_LoadUserFields();
+    }
+    else if (g_cForum.IntValue == 3)
+    {
+        MyBB_LoadGroups();
+        MyBB_LoadUserFields();
     }
     else
     {
@@ -227,6 +237,10 @@ public void OnClientPostAdminCheck(int client)
     else if (g_cForum.IntValue == 2)
     {
         Invision_LoadClient(client, sCommunityID);
+    }
+    else if (g_cForum.IntValue == 3)
+    {
+        MyBB_LoadClient(client, sCommunityID);
     }
 }
 

@@ -118,7 +118,7 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
             {
                 int iFieldID = results.FetchInt(0);
 
-                char sKey[16];
+                char sKey[32];
                 Format(sKey, sizeof(sKey), "core_pfield_%d", iFieldID);
 
                 if (g_cDebug.BoolValue)
@@ -151,7 +151,7 @@ public int Invision_GetUserFieldNames(Database db, DBResultSet results, const ch
         {
             while (results.FetchRow())
             {
-                char sKey[16];
+                char sKey[32];
                 results.FetchString(0, sKey, sizeof(sKey));
 
                 char sName[64];
