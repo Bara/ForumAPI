@@ -55,7 +55,8 @@ public int MyBB_GetForumGroups(Database db, DBResultSet results, const char[] er
         }
 
         g_bGroups = true;
-        LoadClients();
+        // LoadClients();
+        MyBB_LoadUserFields();
     }
 }
 

@@ -20,6 +20,9 @@ StringMap g_smGroups = null;
 StringMap g_smGroupBanner = null;
 StringMap g_smFields = null;
 
+int g_iGroupsRowCount = -1;
+int g_iFieldsRowCount = -1;
+
 bool g_bGroups = false;
 bool g_bFields = false;
 
@@ -146,21 +149,22 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 
     g_bGroups = false;
     g_bFields = false;
+    g_bLoaded = false;
+
+    g_iGroupsRowCount = 0;
+    g_iFieldsRowCount = 0;
 
     if (g_cForum.IntValue == 1)
     {
         XenForo_LoadGroups();
-        XenForo_LoadUserFields();
     }
     else if (g_cForum.IntValue == 2)
     {
         Invision_LoadGroups();
-        Invision_LoadUserFields();
     }
     else if (g_cForum.IntValue == 3)
     {
         MyBB_LoadGroups();
-        MyBB_LoadUserFields();
     }
     else
     {
@@ -177,7 +181,6 @@ void LoadClients()
     {
         return;
     }
-
     
     if (g_bLoaded)
     {

@@ -1,4 +1,3 @@
-
 void Invision_LoadGroups()
 {
     char sQuery[256];
@@ -22,6 +21,13 @@ public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] e
     {
         if (results.HasResults)
         {
+            if (g_cDebug.BoolValue)
+            {
+                LogMessage("[Forum-API] (Invision_GetGroupIDs) Row Count: %d", results.RowCount);
+            }
+
+            g_iGroupsRowCount = results.RowCount;
+
             delete g_smGroups;
             g_smGroups = new StringMap();
 
@@ -60,6 +66,8 @@ public int Invision_GetGroupNames(Database db, DBResultSet results, const char[]
     {
         if (results.HasResults)
         {
+            g_iGroupsRowCount--;
+
             while (results.FetchRow())
             {
                 char sGroupID[12];
@@ -80,8 +88,12 @@ public int Invision_GetGroupNames(Database db, DBResultSet results, const char[]
                 g_smGroupBanner.SetString(sGroupID, sName);
             }
 
-            g_bGroups = true;
-            LoadClients();
+            if (g_iGroupsRowCount == 0)
+            {
+                g_bGroups = true;
+                // LoadClients();
+                Invision_LoadUserFields();
+            }
         }
     }
 }
@@ -114,6 +126,13 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
     {
         if (results.HasResults)
         {
+            if (g_cDebug.BoolValue)
+            {
+                LogMessage("[Forum-API] (Invision_GetUserFieldIDs) Row Count: %d", results.RowCount);
+            }
+
+            g_iFieldsRowCount = results.RowCount;
+
             while (results.FetchRow())
             {
                 int iFieldID = results.FetchInt(0);
@@ -130,9 +149,6 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
                 Format(sQuery, sizeof(sQuery), "SELECT word_key, word_default FROM core_sys_lang_words WHERE word_key = \"%s\"", sKey);
                 g_dDatabase.Query(Invision_GetUserFieldNames, sQuery);
             }
-
-            g_bFields = true;
-            LoadClients();
         }
     }
 }
@@ -149,6 +165,8 @@ public int Invision_GetUserFieldNames(Database db, DBResultSet results, const ch
     {
         if (results.HasResults)
         {
+            g_iFieldsRowCount--;
+
             while (results.FetchRow())
             {
                 char sKey[32];
@@ -163,6 +181,12 @@ public int Invision_GetUserFieldNames(Database db, DBResultSet results, const ch
                 }
 
                 g_smFields.SetString(sKey, sName);
+            }
+
+            if (g_iFieldsRowCount == 0)
+            {
+                g_bFields = true;
+                LoadClients();
             }
         }
     }

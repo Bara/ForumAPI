@@ -55,7 +55,8 @@ public int XenForo_GetForumGroups(Database db, DBResultSet results, const char[]
         }
 
         g_bGroups = true;
-        LoadClients();
+        // LoadClients();
+        XenForo_LoadUserFields();
     }
 }
 
@@ -86,6 +87,13 @@ public void XenForo_Fields(Database db, DBResultSet results, const char[] error,
     {
         if (results.HasResults)
         {
+            if (g_cDebug.BoolValue)
+            {
+                LogMessage("[Forum-API] (XenForo_Fields) Row Count: %d", results.RowCount);
+            }
+
+            g_iFieldsRowCount = results.RowCount;
+
             while (results.FetchRow())
             {
                 char sField[64];
@@ -141,6 +149,8 @@ public void XenForo_FieldsPhrase(Database db, DBResultSet results, const char[] 
         
         if (results.FetchRow())
         {
+            g_iFieldsRowCount--;
+
             if (results.IsFieldNull(0))
             {
                 LogError("[Forum-API] (XenForo_FieldsPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
@@ -155,6 +165,12 @@ public void XenForo_FieldsPhrase(Database db, DBResultSet results, const char[] 
             if (g_cDebug.BoolValue)
             {
                 LogMessage("[Forum-API] (XenForo_FieldsPhrase) Added user_field %s (Name: %s)", sField, sPhrase);
+            }
+
+            if (g_iFieldsRowCount == 0)
+            {
+                g_bFields = true;
+                LoadClients();
             }
         }
     }
