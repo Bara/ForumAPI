@@ -38,7 +38,7 @@ ArrayList g_aSecondaryGroups[MAXPLAYERS + 1] = { null, ... };
 StringMap g_smUserFields[MAXPLAYERS + 1] = { null, ... };
 
 char g_sName[MAXPLAYERS + 1][MAX_NAME_LENGTH];
-char g_sCustomTitle[MAXPLAYERS + 1];
+char g_sCustomTitle[MAXPLAYERS + 1][64];
 
 #include "forum_api/xenforo.sp"
 #include "forum_api/invision.sp"
