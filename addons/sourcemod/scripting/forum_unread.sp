@@ -68,7 +68,7 @@ public void Forum_OnInfoProcessed(int client, const char[] name, int primarygrou
 {
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("[Forum-Unread) (Forum_OnInfoProcessed) Executed");
+		Forum_LogMessage("Unread", "(Forum_OnInfoProcessed) Executed");
 	}
 
 	CreateTimer(g_cInterval.FloatValue * 60.0, Timer_UpdateUnreadCount, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -82,7 +82,7 @@ public Action Timer_UpdateUnreadCount(Handle timer, int userid)
 	{
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Unread) (Forum_OnInfoProcessed) Timer_UpdateUnreadCount and valid Client");
+			Forum_LogMessage("Unread", "(Forum_OnInfoProcessed) Timer_UpdateUnreadCount and valid Client");
 		}
 	
 		UpdateUnreadCount(client);
@@ -97,7 +97,7 @@ void UpdateUnreadCount(int client)
 
 	if (g_cDebug.BoolValue)
 	{
-		LogMessage("[Forum-Unread) (UpdateUnreadCount) g_cForum: %d", g_cForum.IntValue);
+		Forum_LogMessage("Unread", "(UpdateUnreadCount) g_cForum: %d", g_cForum.IntValue);
 	}
 
 	if (g_cForum != null && g_cForum.IntValue > 0)

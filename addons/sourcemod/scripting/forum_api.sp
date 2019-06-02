@@ -26,6 +26,8 @@ int g_iFieldsRowCount = -1;
 bool g_bGroups = false;
 bool g_bFields = false;
 
+char g_sLog[PLATFORM_MAX_PATH + 1];
+
 int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
 int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
 int g_iUserID[MAXPLAYERS + 1] = { -1, ... };
@@ -70,6 +72,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("Forum_GetUserFields", Native_GetUserFields);
     CreateNative("Forum_GetClientUserFields", Native_GetClientUserFields);
 
+    CreateNative("Forum_LogMessage", Native_LogMessage);
+
     g_hOnGrabProcessed = CreateGlobalForward("Forum_OnProcessed", ET_Ignore, Param_Cell, Param_Cell);
     g_hOnInfoProcessed = CreateGlobalForward("Forum_OnInfoProcessed", ET_Ignore, Param_Cell, Param_String, Param_Cell, Param_Cell);
     g_hOnUserFieldsProcessed = CreateGlobalForward("Forum_OnUserFieldsProcessed", ET_Ignore, Param_Cell, Param_Cell);
@@ -95,13 +99,26 @@ public void OnPluginStart()
     RegConsoleCmd("sm_forumid", Command_ForumID);
 
     CSetPrefix("{darkblue}[Forum]{default}");
+
+    char sDate[16];
+    FormatTime(sDate, sizeof(sDate), "%Y%m%d");
+    Format(g_sLog, sizeof(g_sLog), "logs/forum_api/%s.log", sDate);
+    BuildPath(Path_SM, g_sLog, sizeof(g_sLog), g_sLog);
+
+    char sDir[PLATFORM_MAX_PATH + 1];
+    BuildPath(Path_SM, sDir, sizeof(sDir), "logs/forum_api/");
+
+    if (!DirExists(sDir))
+    {
+        CreateDirectory(sDir, FPERM_U_READ|FPERM_U_WRITE|FPERM_U_EXEC|FPERM_G_READ|FPERM_G_EXEC|FPERM_O_READ|FPERM_O_EXEC);
+    }
 }
 
 public Action Command_ForumID(int client, int args)
 {
     if (g_iUserID[client] > 0)
     {
-        CReplyToCommand(client, "Your Forum ID is %d.", g_iUserID[client]);
+        CReplyToCommand(client, "Your Forum ID: %d", g_iUserID[client]);
     }
     else
     {
@@ -144,7 +161,7 @@ public void OnSQLConnect(Database db, const char[] error, any data)
     
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (OnSQLConnect) MySQL connection has been established!");
+        Forum_LogMessage("API", "(OnSQLConnect) MySQL connection has been established!");
     }
 
     g_bGroups = false;
@@ -175,7 +192,7 @@ public void OnSQLConnect(Database db, const char[] error, any data)
 
 void LoadClients()
 {
-    LogMessage("[Forum-API] (LoadClients) Groups: %d, Fields: %d", g_bGroups, g_bFields);
+    Forum_LogMessage("API", "(LoadClients) Groups: %d, Fields: %d", g_bGroups, g_bFields);
 
     if (!g_bGroups || !g_bFields)
     {
@@ -196,7 +213,7 @@ void LoadClients()
     {
         if (IsClientConnected(i))
         {
-            OnClientConnected(i);
+            OnClientPutInServer(i);
         }
         
         if (IsClientValid(i))
@@ -206,7 +223,7 @@ void LoadClients()
     }
 }
 
-public void OnClientConnected(int client)
+public void OnClientPutInServer(int client)
 {
     g_bIsProcessed[client] = false;
     
@@ -227,7 +244,7 @@ public void OnClientPostAdminCheck(int client)
     
     if (g_cDebug.BoolValue)
     {
-        LogMessage("Starting process for user %N...", client);
+        Forum_LogMessage("API", "(OnClientPostAdminCheck) Starting process for user %N...", client);
     }
     
     char sCommunityID[32];
@@ -403,4 +420,18 @@ public int Native_GetClientUserFields(Handle plugin, int numParams)
     }
 
     return -1;
+}
+
+public int Native_LogMessage(Handle plugin, int numParams)
+{
+    // Example - Forum_LogMessage("[Admins]", "Test Message: %s", sText);
+    char sPlugin[24];
+    GetNativeString(1, sPlugin, sizeof(sPlugin));
+
+    char sMessage[512];
+    int iBytes;
+
+    FormatNativeString(0, 2, 3, sizeof(sMessage), iBytes, sMessage);
+
+    LogToFileEx(g_sLog, "[%s] %s", sPlugin, sMessage);
 }

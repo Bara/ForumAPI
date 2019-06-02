@@ -6,7 +6,7 @@ void MyBB_LoadGroups()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (MyBB_LoadGroups) Query: %s", sQuery);
+        Forum_LogMessage("API", "(MyBB_LoadGroups) Query: %s", sQuery);
     }
 }
 
@@ -42,7 +42,7 @@ public int MyBB_GetForumGroups(Database db, DBResultSet results, const char[] er
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (MyBB_GetForumGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
+                    Forum_LogMessage("API", "(MyBB_GetForumGroups) GroupID: %d, Name: %s, Banner: %s", groupid, sName, sBanner);
                 }
 
                 g_smGroups.SetString(sKey, sName);
@@ -71,7 +71,7 @@ void MyBB_LoadUserFields()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (MyBB_LoadUserFields) Query: %s", sQuery);
+        Forum_LogMessage("API", "(MyBB_LoadUserFields) Query: %s", sQuery);
     }
 }
 
@@ -98,7 +98,7 @@ public void MyBB_Fields(Database db, DBResultSet results, const char[] error, in
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (MyBB_Fields) Added user_field %s (Name: %s)", sFieldID, sName);
+                    Forum_LogMessage("API", "(MyBB_Fields) Added user_field %s (Name: %s)", sFieldID, sName);
                 }
             }
 
@@ -116,7 +116,7 @@ void MyBB_LoadClient(int client, const char[] sCommunityID)
     
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (MyBB_LoadClient) Query: %s", sQuery);
+        Forum_LogMessage("API", "(MyBB_LoadClient) Query: %s", sQuery);
     }
 }
 
@@ -139,7 +139,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
         
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (MyBB_GetUserId) Retrieving data for %N...", client);
+            Forum_LogMessage("API", "(MyBB_GetUserId) Retrieving data for %N...", client);
         }
         
         if (results.FetchRow())
@@ -160,7 +160,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
             
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (MyBB_GetUserId) User '%N' has been processed successfully!", client);
+                Forum_LogMessage("API", "(MyBB_GetUserId) User '%N' has been processed successfully!", client);
             }
 
             char sQuery[256];
@@ -169,7 +169,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
 
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (MyBB_GetUserId) - User Informations - Query: %s", sQuery);
+                Forum_LogMessage("API", "(MyBB_GetUserId) User Informations - Query: %s", sQuery);
             }
 
             StringMapSnapshot smFields = g_smFields.Snapshot();
@@ -187,7 +187,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
                 char sColumn[32];
                 Format(sColumn, sizeof(sColumn), "fid%s", sKey);
 
-                LogMessage("smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
+                Forum_LogMessage("API", "(MyBB_GetUserId) smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
 
                 Format(sQuery, sizeof(sQuery), "SELECT %s FROM mybb_userfields WHERE ufid = '%d'", sColumn, g_iUserID[client]);
                 DataPack pack = new DataPack();
@@ -197,7 +197,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (MyBB_GetUserId) - User Fields - Query: %s", sQuery);
+                    Forum_LogMessage("API", "(MyBB_GetUserId) User Fields - Query: %s", sQuery);
                 }
             }
 
@@ -229,7 +229,7 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
         
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (MyBB_UserInformations) Retrieving informations for %N...", client);
+            Forum_LogMessage("API", "(MyBB_UserInformations) Retrieving informations for %N...", client);
         }
         
         if (results.FetchRow())
@@ -269,7 +269,7 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
             
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (MyBB_UserInformations) User informations for'%N' has been processed successfully!", client);
+                Forum_LogMessage("API", "(MyBB_UserInformations) User informations for'%N' has been processed successfully!", client);
             }
         }
         else
@@ -303,11 +303,11 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
         }
 
         g_iFieldCount[client]++;
-        LogMessage("Field Count: %d", g_iFieldCount[client]);
+        Forum_LogMessage("API", "(MyBB_UserFields) Field Count: %d", g_iFieldCount[client]);
 
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (MyBB_UserFields) Retrieving user field %s for %N...", sColumn, client);
+            Forum_LogMessage("API", "(MyBB_UserFields) Retrieving user field %s for %N...", sColumn, client);
         }
         
         if (results.FetchRow())
@@ -335,7 +335,7 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (MyBB_UserFields) user fields for'%N' has been processed successfully!", client);
+                    Forum_LogMessage("API", "(MyBB_UserFields) user fields for'%N' has been processed successfully!", client);
                 }
             }
         }

@@ -6,7 +6,7 @@ void Invision_LoadGroups()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (Invision_LoadGroups) Query: %s", sQuery);
+        Forum_LogMessage("API", "(Invision_LoadGroups) Query: %s", sQuery);
     }
 }
 
@@ -23,7 +23,7 @@ public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] e
         {
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (Invision_GetGroupIDs) Row Count: %d", results.RowCount);
+                Forum_LogMessage("API", "(Invision_GetGroupIDs) Row Count: %d", results.RowCount);
             }
 
             g_iGroupsRowCount = results.RowCount;
@@ -43,7 +43,7 @@ public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] e
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_GetGroupIDs) GroupID: %d, Key: %s", groupid, sKey);
+                    Forum_LogMessage("API", "(Invision_GetGroupIDs) GroupID: %d, Key: %s", groupid, sKey);
                 }
 
                 char sQuery[256];
@@ -81,7 +81,7 @@ public int Invision_GetGroupNames(Database db, DBResultSet results, const char[]
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_GetGroupNames) Key: %s, Name: %s", sKey, sName);
+                    Forum_LogMessage("API", "(Invision_GetGroupNames) Key: %s, Name: %s", sKey, sName);
                 }
 
                 g_smGroups.SetString(sGroupID, sName);
@@ -110,7 +110,7 @@ void Invision_LoadUserFields()
 
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (Invision_LoadUserFields) Query: %s", sQuery);
+        Forum_LogMessage("API", "(Invision_LoadUserFields) Query: %s", sQuery);
     }
 }
 
@@ -128,7 +128,7 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
         {
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (Invision_GetUserFieldIDs) Row Count: %d", results.RowCount);
+                Forum_LogMessage("API", "(Invision_GetUserFieldIDs) Row Count: %d", results.RowCount);
             }
 
             g_iFieldsRowCount = results.RowCount;
@@ -142,7 +142,7 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_GetUserFieldIDs) UserFieldID: %d, Key: %s", iFieldID, sKey);
+                    Forum_LogMessage("API", "(Invision_GetUserFieldIDs) UserFieldID: %d, Key: %s", iFieldID, sKey);
                 }
 
                 char sQuery[256];
@@ -177,7 +177,7 @@ public int Invision_GetUserFieldNames(Database db, DBResultSet results, const ch
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_GetUserFieldNames) Key: %s, Name: %s", sKey, sName);
+                    Forum_LogMessage("API", "(Invision_GetUserFieldNames) Key: %s, Name: %s", sKey, sName);
                 }
 
                 g_smFields.SetString(sKey, sName);
@@ -201,7 +201,7 @@ void Invision_LoadClient(int client, const char[] sCommunityID)
     
     if (g_cDebug.BoolValue)
     {
-        LogMessage("[Forum-API] (Invision_LoadClient) Query: %s", sQuery);
+        Forum_LogMessage("API", "(Invision_LoadClient) Query: %s", sQuery);
     }
 }
 
@@ -224,7 +224,7 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
         
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (Invision_GetUserId) Retrieving data for %N...", client);
+            Forum_LogMessage("API", "(Invision_GetUserId) Retrieving data for %N...", client);
         }
         
         if (results.FetchRow())
@@ -245,7 +245,7 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
             
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (Invision_GetUserId) User '%N' has been processed successfully!", client);
+                Forum_LogMessage("API", "(Invision_GetUserId) User '%N' has been processed successfully!", client);
             }
 
             char sQuery[256];
@@ -254,7 +254,7 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
 
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (Invision_GetUserId) - User Informations - Query: %s", sQuery);
+                Forum_LogMessage("API", "(Invision_GetUserId) User Informations - Query: %s", sQuery);
             }
 
             StringMapSnapshot smFields = g_smFields.Snapshot();
@@ -269,10 +269,10 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
             {
                 smFields.GetKey(i, sKey, sizeof(sKey));
 
-                LogMessage("smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
+                Forum_LogMessage("API", "(Invision_GetUserId) smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
 
                 ReplaceString(sKey, sizeof(sKey), "core_pfield_", "");
-                LogMessage("(ReplaceString) sKey: %s", sKey);
+                Forum_LogMessage("API", "(Invision_GetUserId) (ReplaceString) sKey: %s", sKey);
 
                 Format(sQuery, sizeof(sQuery), "SELECT field_%s FROM core_pfields_content WHERE member_id = '%d'", sKey, g_iUserID[client]);
                 DataPack pack = new DataPack();
@@ -283,7 +283,7 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_GetUserId) - User Fields - Query: %s", sQuery);
+                    Forum_LogMessage("API", "(Invision_GetUserId) User Fields - Query: %s", sQuery);
                 }
             }
 
@@ -315,7 +315,7 @@ public void Invision_UserInformations(Database db, DBResultSet results, const ch
         
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (Invision_UserInformations) Retrieving informations for %N...", client);
+            Forum_LogMessage("API", "(Invision_UserInformations) Retrieving informations for %N...", client);
         }
         
         if (results.FetchRow())
@@ -355,7 +355,7 @@ public void Invision_UserInformations(Database db, DBResultSet results, const ch
             
             if (g_cDebug.BoolValue)
             {
-                LogMessage("[Forum-API] (Invision_UserInformations) User informations for'%N' has been processed successfully!", client);
+                Forum_LogMessage("API", "(Invision_UserInformations) User informations for'%N' has been processed successfully!", client);
             }
         }
         else
@@ -389,11 +389,11 @@ public void Invision_UserFields(Database db, DBResultSet results, const char[] e
         }
 
         g_iFieldCount[client]++;
-        LogMessage("Field Count: %d", g_iFieldCount[client]);
+        Forum_LogMessage("API", "(Invision_UserFields) Field Count: %d", g_iFieldCount[client]);
 
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[Forum-API] (Invision_UserFields) Retrieving user field %s for %N...", sKey, client);
+            Forum_LogMessage("API", "(Invision_UserFields) Retrieving user field %s for %N...", sKey, client);
         }
         
         if (results.FetchRow())
@@ -421,7 +421,7 @@ public void Invision_UserFields(Database db, DBResultSet results, const char[] e
 
                 if (g_cDebug.BoolValue)
                 {
-                    LogMessage("[Forum-API] (Invision_UserFields) User fields for'%N' has been processed successfully!", client);
+                    Forum_LogMessage("API", "(Invision_UserFields) User fields for'%N' has been processed successfully!", client);
                 }
             }
         }

@@ -24,7 +24,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	RegPluginLibrary("forum_admins");
-	
+
 	return APLRes_Success;
 }
 
@@ -94,7 +94,7 @@ void SetAdmin(int client, bool skip = false)
 	{
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admins] (SetAdmin) Admin ID was invalid, let's create admin...");
+			Forum_LogMessage("Admins", "(SetAdmin) Admin ID was invalid, let's create admin...");
 		}
 
 		aAdmin = CreateAdmin();
@@ -102,7 +102,7 @@ void SetAdmin(int client, bool skip = false)
 
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admins] (SetAdmin) Admin created. (Admin ID: %d)", aAdmin);
+			Forum_LogMessage("Admins", "(SetAdmin) Admin created. (Admin ID: %d)", aAdmin);
 		}
 	}
 
@@ -120,7 +120,7 @@ void SetAdmin(int client, bool skip = false)
 		smGroup.GetString(sForumGroup, sGName, sizeof(sGName));
 		if (g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admins] (SetAdmin) - Primary- Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
+			Forum_LogMessage("Admins", "(SetAdmin) - Primary- Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
 		}
 	}
 
@@ -137,7 +137,7 @@ void SetAdmin(int client, bool skip = false)
 			smGroup.GetString(sForumGroup, sGName, sizeof(sGName));
 			if (g_cDebug.BoolValue)
 			{
-				LogMessage("[Forum-Admins] (SetAdmin) - Secondary - Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
+				Forum_LogMessage("Admins", "(SetAdmin) - Secondary - Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
 			}
 		}
 	}
@@ -214,20 +214,20 @@ bool LoadGroups(bool reloadPlayers = false)
 
 		if (bDebug && g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admin] (LoadGroups) SectionName: %s", sGroupID);
+			Forum_LogMessage("Admins", "(LoadGroups) SectionName: %s", sGroupID);
 		}
 
 		if(!g_smGroupIndex.GetValue(sGroupID, gGroup))
 		{
 			if (!smGroups.GetString(sGroupID, sName, sizeof(sName)))
 			{
-				LogError("[Forum-Admin] (LoadGroups) Can't find the group name of %s...", sGroupID);
+				LogError("[Forum-Admins] (LoadGroups) Can't find the group name of %s...", sGroupID);
 				continue;
 			}
 
 			if (bDebug && g_cDebug.BoolValue)
 			{
-				LogMessage("[Forum-Admin] (LoadGroups) Can't find %s in group index stringmap", sName);
+				Forum_LogMessage("Admins", "(LoadGroups) Can't find %s in group index stringmap", sName);
 			}
 
 			gGroup = CreateAdmGroup(sName);
@@ -236,13 +236,13 @@ bool LoadGroups(bool reloadPlayers = false)
 			{
 				if (bDebug && g_cDebug.BoolValue)
 				{
-					LogMessage("[Forum-Admin] (LoadGroups) Can't create admin group %s", sName);
+					Forum_LogMessage("Admins", "(LoadGroups) Can't create admin group %s", sName);
 				}
 				gGroup = FindAdmGroup(sName);
 
 				if (gGroup == INVALID_GROUP_ID)
 				{
-					LogError("[Forum-Admin] (LoadGroups) Can't create or find the admin group: %s", sName);
+					LogError("[Forum-Admins] (LoadGroups) Can't create or find the admin group: %s", sName);
 					continue;
 				}
 			}
@@ -251,7 +251,7 @@ bool LoadGroups(bool reloadPlayers = false)
 		g_smGroupIndex.SetValue(sGroupID, gGroup);
 		if (bDebug && g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admin] (LoadGroups) Saved group %s to group index (%d)", sName, gGroup);
+			Forum_LogMessage("Admins", "(LoadGroups) Saved group %s to group index (%d)", sName, gGroup);
 		}
 
 		if (kvConfig.GetString("flags", sFlags, sizeof(sFlags)))
@@ -264,7 +264,7 @@ bool LoadGroups(bool reloadPlayers = false)
 				{
 					if (bDebug && g_cDebug.BoolValue)
 					{
-						LogMessage("[Forum-Admin] (LoadGroups) Add flag %c (%d) to %s", sFlags[i], iFlag, sName);
+						Forum_LogMessage("Admins", "(LoadGroups) Add flag %c (%d) to %s", sFlags[i], iFlag, sName);
 					}
 					SetAdmGroupAddFlag(gGroup, iFlag, true);
 				}
@@ -274,7 +274,7 @@ bool LoadGroups(bool reloadPlayers = false)
 		int iImmunity = kvConfig.GetNum("immunity", 0);
 		if (bDebug && g_cDebug.BoolValue)
 		{
-			LogMessage("[Forum-Admin] (LoadGroups) Set immunity level for %s to %d", sName, iImmunity);
+			Forum_LogMessage("Admins", "(LoadGroups) Set immunity level for %s to %d", sName, iImmunity);
 		}
 		SetAdmGroupImmunityLevel(gGroup, iImmunity);
 
