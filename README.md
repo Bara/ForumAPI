@@ -1,4 +1,4 @@
-# Forum-API
+# ForumAPI
 
 Tested with:
  - [XenForo 2.1.2](https://xenforo.com/) and [Steam Authentication and Integration 1.7.9 by Assadi](https://xenforo.com/community/resources/xf2-s70-steam-authentication-and-integration-connected-accounts-new-analytics-xf1-importing.6088/)
