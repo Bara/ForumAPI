@@ -1,0 +1,17 @@
+sudo: false
+dist: xenial
+group: edge
+language: c
+
+addons:
+  apt:
+    packages:
+    - lib32z1
+    - lib32stdc++6
+
+env:
+  - VERSION=1.9
+  - VERSION=1.10
+
+script:
+  - bash ci/test.sh $VERSION

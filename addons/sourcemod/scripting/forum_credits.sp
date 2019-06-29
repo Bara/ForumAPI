@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <multicolors>
 #include <autoexecconfig>
-#include <xenforo_api>
+#include <forum_api>
 
 #define LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(IsClientValid(%1))
 
@@ -14,26 +14,30 @@ int g_iCredits[MAXPLAYERS + 1] = { -1, ... };
 
 Handle g_hOnCreditsUpdate = null;
 
+ConVar g_cTable = null;
 ConVar g_cColumn = null;
+ConVar g_cUserColumn = null;
 
+char g_sTable[64];
 char g_sColumn[64];
+char g_sUserColumn[64];
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	CreateNative("XenForo_GetClientCredits", Native_GetClientCredits);
-	CreateNative("XenForo_AddClientCredits", Native_AddClientCredits);
-	CreateNative("XenForo_RemoveClientCredits", Native_RemoveClientCredits);
+	CreateNative("Forum_GetClientCredits", Native_GetClientCredits);
+	CreateNative("Forum_AddClientCredits", Native_AddClientCredits);
+	CreateNative("Forum_RemoveClientCredits", Native_RemoveClientCredits);
 
-	g_hOnCreditsUpdate = CreateGlobalForward("XF_OnCreditsUpdate", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+	g_hOnCreditsUpdate = CreateGlobalForward("Forum_OnCreditsUpdate", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	
-	RegPluginLibrary("xenforo_credits");
+	RegPluginLibrary("forum_credits");
 
 	return APLRes_Success;
 }
 
 public Plugin myinfo = 
 {
-	name = "Xenforo - Credits",
+	name = "Forum - Credits",
 	author = "Bara", 
 	description = "",
 	version = "1.0.0", 
@@ -44,24 +48,31 @@ public void OnPluginStart()
 {
 	CreateTimer(30.0, Timer_GetAllClientCredits, _, TIMER_REPEAT);
 
-	if (XenForo_IsConnected())
+	if (Forum_IsConnected())
 	{
-		g_dDB = XenForo_GetDatabase();
+		g_dDB = Forum_GetDatabase();
 	}
 
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
-	AutoExecConfig_SetFile("xenforo_credits");
-	g_cColumn = AutoExecConfig_CreateConVar("xenforo_credits_column", "dbtech_credits", "Name of the column for reading and writing the players credits.");
+	AutoExecConfig_SetFile("forum_credits");
+	g_cTable = AutoExecConfig_CreateConVar("forum_credits_table", "xf_user", "Name of the table, where the credits are saved.");
+	g_cColumn = AutoExecConfig_CreateConVar("forum_credits_column", "dbtech_credits", "Name of the column for reading and writing the players credits.");
+	g_cUserColumn = AutoExecConfig_CreateConVar("forum_credits_user_column", "user_id", "Name of the column to find the correct member/user id.");
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
+	g_cTable.GetString(g_sColumn, sizeof(g_sColumn));
 	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cUserColumn.GetString(g_sColumn, sizeof(g_sColumn));
+
+	g_cTable.AddChangeHook(CVar_OnChange);
 	g_cColumn.AddChangeHook(CVar_OnChange);
+	g_cUserColumn.AddChangeHook(CVar_OnChange);
 
-	CSetPrefix("{darkblue}[XenForo]{default}");
+	CSetPrefix("{darkblue}[Forum]{default}");
 
-	RegConsoleCmd("sm_xfcredits", Command_XFCredits);
+	RegConsoleCmd("sm_forumcredits", Command_ForumCredits);
 }
 
 public void OnClientDisconnect(int client)
@@ -71,9 +82,17 @@ public void OnClientDisconnect(int client)
 
 public void CVar_OnChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if (convar == g_cColumn)
+	if (convar == g_cTable)
+	{
+		g_cTable.GetString(g_sTable, sizeof(g_sTable));
+	}
+	else if (convar == g_cColumn)
 	{
 		g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	}
+	else if (convar == g_cUserColumn)
+	{
+		g_cUserColumn.GetString(g_sUserColumn, sizeof(g_sUserColumn));
 	}
 }
 
@@ -85,15 +104,15 @@ public void OnMapEnd()
 	}
 }
 
-public Action Command_XFCredits(int client, int args)
+public Action Command_ForumCredits(int client, int args)
 {
-	if (XenForo_GetClientID(client) > 0)
+	if (Forum_GetClientID(client) > 0)
 	{
 		CReplyToCommand(client, "You have %d Credits.", g_iCredits[client]);
 	}
 	else
 	{
-		CReplyToCommand(client, "You don't have a XenForo ID.");
+		CReplyToCommand(client, "You don't have a Forum ID.");
 	}
 	return Plugin_Handled;
 }
@@ -107,9 +126,9 @@ public Action Timer_GetAllClientCredits(Handle timer)
 {
 	LoopClients(i)
 	{
-		if (XenForo_IsProcessed(i))
+		if (Forum_IsProcessed(i))
 		{
-			if (XenForo_GetClientID(i) > 0)
+			if (Forum_GetClientID(i) > 0)
 			{
 				GetClientCredits(i);
 			}
@@ -119,25 +138,25 @@ public Action Timer_GetAllClientCredits(Handle timer)
 
 public void OnConfigsExecuted()
 {
-	if (XenForo_IsConnected())
+	if (Forum_IsConnected())
 	{
-		XF_OnConnected();
+		Forum_OnConnected();
 	}
 }
 
 #if defined _stamm_included
 public int STAMM_OnClientReady(int client)
 {
-	if (XenForo_IsConnected())
+	if (Forum_IsConnected())
 	{
-		XF_OnConnected();
+		Forum_OnConnected();
 	}
 }
 #endif
 
-public void XF_OnConnected()
+public void Forum_OnConnected()
 {
-	g_dDB = XenForo_GetDatabase();
+	g_dDB = Forum_GetDatabase();
 
 	GetAllClientCredits();
 }
@@ -150,19 +169,19 @@ void GetAllClientCredits()
 	}
 }
 
-public void XF_OnProcessed(int client, int xf_userid)
+public void Forum_OnProcessed(int client, int forum_userid)
 {
 	GetClientCredits(client);
 }
 
 void GetClientCredits(int client)
 {
-	int iUserID = XenForo_GetClientID(client);
+	int iUserID = Forum_GetClientID(client);
 	
 	if (iUserID > 0)
 	{
 		char sQuery[256];
-		Format(sQuery, sizeof(sQuery), "SELECT %s FROM xf_user WHERE user_id = %d;", g_sColumn, iUserID);
+		Format(sQuery, sizeof(sQuery), "SELECT \"%s\" FROM \"%s\" WHERE \"%s\" = %d;", g_sColumn, g_sTable, g_sUserColumn, iUserID);
 		g_dDB.Query(SQL_GetClientCredits, sQuery, GetClientUserId(client));
 	}
 }
@@ -171,7 +190,7 @@ public void SQL_GetClientCredits(Database db, DBResultSet results, const char[] 
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-Credits] (SQL_GetClientCredits) Fail at Query: %s", error);
+		SetFailState("[Forum-Credits] (SQL_GetClientCredits) Fail at Query: %s", error);
 		return;
 	}
 	else
@@ -203,7 +222,7 @@ public int Native_GetClientCredits(Handle plugin, int numParams)
 		return -1;
 	}
 
-	int iUserID = XenForo_GetClientID(client);
+	int iUserID = Forum_GetClientID(client);
 
 	if (iUserID == -1)
 	{
@@ -222,7 +241,7 @@ public int Native_AddClientCredits(Handle plugin, int numParams)
 		return false;
 	}
 
-	int iUserID = XenForo_GetClientID(client);
+	int iUserID = Forum_GetClientID(client);
 
 	if (iUserID == -1)
 	{
@@ -230,7 +249,7 @@ public int Native_AddClientCredits(Handle plugin, int numParams)
 	}
 
 	char sQuery[512];
-	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE xf_user SET %s = %s + '%d' WHERE user_id = '%d';", g_sColumn, g_sColumn, iUserID);
+	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE \"%s\" SET \"%s\" = \"%s\" + '%d' WHERE \"%s\" = '%d';", g_sTable, g_sColumn, g_sColumn, g_sUserColumn, iUserID);
 
 	DataPack pack = new DataPack();
 	pack.WriteCell(GetClientUserId(client));
@@ -250,7 +269,7 @@ public int Native_RemoveClientCredits(Handle plugin, int numParams)
 		return false;
 	}
 
-	int iUserID = XenForo_GetClientID(client);
+	int iUserID = Forum_GetClientID(client);
 
 	if (iUserID == -1)
 	{
@@ -258,7 +277,7 @@ public int Native_RemoveClientCredits(Handle plugin, int numParams)
 	}
 
 	char sQuery[512];
-	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE xf_user SET %s = %s - '%d' WHERE user_id = '%d';", g_sColumn, g_sColumn, iUserID);
+	g_dDB.Format(sQuery, sizeof(sQuery), "UPDATE \"%s\" SET \"%s\" = \"%s\" - '%d' WHERE \"%s\" = '%d';", g_sTable, g_sColumn, g_sColumn, g_sUserColumn, iUserID);
 
 	DataPack pack = new DataPack();
 	pack.WriteCell(GetClientUserId(client));
@@ -273,7 +292,7 @@ public void SQL_UpdateCredits(Database db, DBResultSet results, const char[] err
 {
 	if(db == null || strlen(error) > 0)
 	{
-		SetFailState("[XenForo-Credits] (SQL_UpdateCredits) Fail at Query: %s", error);
+		SetFailState("[Forum-Credits] (SQL_UpdateCredits) Fail at Query: %s", error);
 		delete pack;
 		return;
 	}
