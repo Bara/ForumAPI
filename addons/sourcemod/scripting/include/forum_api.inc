@@ -182,6 +182,8 @@ native StringMap Forum_GetUserFields();
 
 native void Forum_LogMessage(const char[] tag, const char[] message, any ...);
 
+native bool Forum_IsLoaded();
+
 public SharedPlugin __pl_forum_api = 
 {
 	name = "forum_api",
@@ -209,5 +211,6 @@ public void __pl_forum_api_SetNTVOptional()
 	MarkNativeAsOptional("Forum_GetGroupBannerText");
 	MarkNativeAsOptional("Forum_GetUserFields");
 	MarkNativeAsOptional("Forum_LogMessage");
+	MarkNativeAsOptional("Forum_IsLoaded");
 }
 #endif

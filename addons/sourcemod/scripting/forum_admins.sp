@@ -58,6 +58,12 @@ public void Forum_OnInfoProcessed(int client, const char[] name, int primarygrou
 
 public void OnRebuildAdminCache(AdminCachePart part)
 {
+	if (!Forum_IsLoaded())
+	{
+		Forum_LogMessage("Admins", "(OnRebuildAdminCache) Forum_IsLoaded is false.");
+		return;
+	}
+
 	if (part == AdminCache_Groups)
 	{
 		g_bLoaded = LoadGroups();

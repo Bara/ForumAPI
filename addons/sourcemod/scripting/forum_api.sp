@@ -62,10 +62,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("Forum_GetClientCustomTitle", Native_GetClientCustomTitle);
     CreateNative("Forum_GetClientPrimaryGroup", Native_GetClientPrimaryGroup);
     CreateNative("Forum_GetClientSecondaryGroups", Native_GetClientSecondaryGroups);
-    
     CreateNative("Forum_IsProcessed", Native_IsProcessed);
+
     CreateNative("Forum_TExecute", Native_TExecute);
+
     CreateNative("Forum_IsConnected", Native_IsConnected);
+    CreateNative("Forum_IsLoaded", Native_IsLoaded);
     CreateNative("Forum_GetDatabase", Native_GetDatabase);
     CreateNative("Forum_GetGroupList", Native_GetGroupList);
     CreateNative("Forum_GetGroupBannerText", Native_GetGroupBannerText);
@@ -434,4 +436,9 @@ public int Native_LogMessage(Handle plugin, int numParams)
     FormatNativeString(0, 2, 3, sizeof(sMessage), iBytes, sMessage);
 
     LogToFileEx(g_sLog, "[%s] %s", sPlugin, sMessage);
+}
+
+public int Native_IsLoaded(Handle plugin, int numParams)
+{
+    return g_bLoaded;
 }
