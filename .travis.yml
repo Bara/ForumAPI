@@ -13,5 +13,5 @@ env:
   - VERSION=1.9
   - VERSION=1.10
 
-before_script:
+script:
   - bash ci/test.sh $VERSION
