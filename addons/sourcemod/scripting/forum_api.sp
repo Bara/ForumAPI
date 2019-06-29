@@ -94,7 +94,7 @@ public void OnPluginStart()
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("forum_api");
     g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision, 3 - MyBB)", _, true, 0.0, true, 3.0);
-    g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "1", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
+    g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "0", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 
