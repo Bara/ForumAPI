@@ -35,7 +35,7 @@ public void OnPluginStart()
 	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
 	AutoExecConfig_SetFile("forum_admins");
-	// Configs...
+	g_cDebug = AutoExecConfig_CreateConVar("forum_admins_debug", "0", "Enable debug mode?", _, true, 0.0, true, 1.0);
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
@@ -47,8 +47,11 @@ public void OnPluginStart()
 public void OnConfigsExecuted()
 {
 	g_bLoaded = LoadGroups(true);
+}
 
-	g_cDebug = FindConVar("forum_api_debug");
+public void OnMapStart()
+{
+	SetAllAdmin();
 }
 
 public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
@@ -74,20 +77,25 @@ public void OnRebuildAdminCache(AdminCachePart part)
 	}
 }
 
-void SetAllAdmin(bool skip = false)
+void SetAllAdmin()
 {
+	if (!g_bLoaded)
+	{
+		return;
+	}
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && Forum_IsProcessed(i))
 		{
-			SetAdmin(i, skip);
+			SetAdmin(i);
 		}
 	}
 }
 
-void SetAdmin(int client, bool skip = false)
+void SetAdmin(int client)
 {
-	if (!skip && !g_bLoaded)
+	if (!g_bLoaded)
 	{
 		LogError("[Forum-Admins] (SetAdmin) Admin groups not loaded!");
 		LateLoadAdminCall(client);
@@ -126,7 +134,7 @@ void SetAdmin(int client, bool skip = false)
 		smGroup.GetString(sForumGroup, sGName, sizeof(sGName));
 		if (g_cDebug.BoolValue)
 		{
-			Forum_LogMessage("Admins", "(SetAdmin) - Primary- Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
+			Forum_LogMessage("Admins", "(SetAdmin) - Primary - Added \"%N\" to group: %s (Group ID: %d)", client, sGName, gGroup);
 		}
 	}
 
@@ -169,18 +177,6 @@ bool LoadGroups(bool reloadPlayers = false)
 		return false;
 	}
 
-	bool bDebug = true;
-
-	if (g_cDebug == null)
-	{
-		g_cDebug = FindConVar("forum_api_debug");
-
-		if (g_cDebug == null)
-		{
-			bDebug = false;
-		}
-	}
-
 	char sFile[PLATFORM_MAX_PATH + 1];
 	BuildPath(Path_SM, sFile, sizeof(sFile), "configs/forum_admins.cfg");
 
@@ -218,7 +214,7 @@ bool LoadGroups(bool reloadPlayers = false)
 	{
 		kvConfig.GetSectionName(sGroupID, sizeof(sGroupID));
 
-		if (bDebug && g_cDebug.BoolValue)
+		if (g_cDebug.BoolValue)
 		{
 			Forum_LogMessage("Admins", "(LoadGroups) SectionName: %s", sGroupID);
 		}
@@ -231,7 +227,7 @@ bool LoadGroups(bool reloadPlayers = false)
 				continue;
 			}
 
-			if (bDebug && g_cDebug.BoolValue)
+			if (g_cDebug.BoolValue)
 			{
 				Forum_LogMessage("Admins", "(LoadGroups) Can't find %s in group index stringmap", sName);
 			}
@@ -240,7 +236,7 @@ bool LoadGroups(bool reloadPlayers = false)
 
 			if (gGroup == INVALID_GROUP_ID)
 			{
-				if (bDebug && g_cDebug.BoolValue)
+				if (g_cDebug.BoolValue)
 				{
 					Forum_LogMessage("Admins", "(LoadGroups) Can't create admin group %s", sName);
 				}
@@ -255,7 +251,7 @@ bool LoadGroups(bool reloadPlayers = false)
 		}
 
 		g_smGroupIndex.SetValue(sGroupID, gGroup);
-		if (bDebug && g_cDebug.BoolValue)
+		if (g_cDebug.BoolValue)
 		{
 			Forum_LogMessage("Admins", "(LoadGroups) Saved group %s to group index (%d)", sName, gGroup);
 		}
@@ -268,7 +264,7 @@ bool LoadGroups(bool reloadPlayers = false)
 			{
 				if (FindFlagByChar(sFlags[i], iFlag))
 				{
-					if (bDebug && g_cDebug.BoolValue)
+					if (g_cDebug.BoolValue)
 					{
 						Forum_LogMessage("Admins", "(LoadGroups) Add flag %c (%d) to %s", sFlags[i], iFlag, sName);
 					}
@@ -278,7 +274,7 @@ bool LoadGroups(bool reloadPlayers = false)
 		}
 
 		int iImmunity = kvConfig.GetNum("immunity", 0);
-		if (bDebug && g_cDebug.BoolValue)
+		if (g_cDebug.BoolValue)
 		{
 			Forum_LogMessage("Admins", "(LoadGroups) Set immunity level for %s to %d", sName, iImmunity);
 		}
@@ -290,7 +286,7 @@ bool LoadGroups(bool reloadPlayers = false)
 
 	if (reloadPlayers)
 	{
-		SetAllAdmin(true);
+		SetAllAdmin();
 	}
 
 	return true;
