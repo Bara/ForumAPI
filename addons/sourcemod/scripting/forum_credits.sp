@@ -62,10 +62,6 @@ public void OnPluginStart()
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
-	g_cTable.GetString(g_sColumn, sizeof(g_sColumn));
-	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
-	g_cUserColumn.GetString(g_sColumn, sizeof(g_sColumn));
-
 	g_cTable.AddChangeHook(CVar_OnChange);
 	g_cColumn.AddChangeHook(CVar_OnChange);
 	g_cUserColumn.AddChangeHook(CVar_OnChange);
@@ -138,6 +134,10 @@ public Action Timer_GetAllClientCredits(Handle timer)
 
 public void OnConfigsExecuted()
 {
+	g_cTable.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cUserColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	
 	if (Forum_IsConnected())
 	{
 		Forum_OnConnected();
