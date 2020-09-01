@@ -216,7 +216,7 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
     {
         int client = GetClientOfUserId(userid);
         
-        if (client > 0 && !IsClientValid(client))
+        if (!IsClientValid(client))
         {
             LogError("[Forum-API] (Invision_GetUserId) Error grabbing User Data: Client invalid");
             return;

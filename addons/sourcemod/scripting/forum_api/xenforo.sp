@@ -199,7 +199,7 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
     {
         int client = GetClientOfUserId(userid);
         
-        if (client > 0 && !IsClientValid(client))
+        if (!IsClientValid(client))
         {
             LogError("[Forum-API] (XenForo_GetUserId) Error grabbing User Data: Client invalid");
             return;
