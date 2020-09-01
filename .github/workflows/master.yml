@@ -1,0 +1,35 @@
+name: Compile with SourceMod
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sm_version: ["1.10", "1.11"]
+
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set environment variables
+        run: |
+          SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
+          echo ::set-env name=SOURCEMOD_PATH::$SOURCEMOD_PATH
+          echo ::set-env name=SCRIPTS_PATH::$SOURCEMOD_PATH/scripting
+
+      - name: Setup SourcePawn Compiler ${{ matrix.SM_VERSION }}
+        uses: rumblefrog/setup-sp@master
+        with:
+          version: ${{ matrix.SM_VERSION }}
+
+      - name: Compiling games
+        run: |
+          for file in forum_*.sp
+          do
+            echo -e "\nCompiling $file..."
+            spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include $file
+          done
+        working-directory: ${{ env.SCRIPTS_PATH }}/
