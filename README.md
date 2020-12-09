@@ -9,6 +9,7 @@ Tested with:
  - [Invision Power Board 4.4.3](https://invisioncommunity.com/) and [Steam Login Method 3.0.0 by Lavo](https://invisioncommunity.com/files/file/7555-steam-login-method/)
  - [Invision Power Board 4.4.10](https://invisioncommunity.com/) and [Steam Profile Integration 2.1.11 by Aiwa](https://invisioncommunity.com/files/file/8170-steam-profile-integration/)
  - [MyBB 1.8.20](https://mybb.com/) and [Steam Login for MyBB](https://github.com/brnicot/Steam-Login-MyBB-1.8)
+ - [MyBB 1.8.24](https://mybb.com/) and [Steam Login for MyBB](https://github.com/FreezeWarfare/Steam-Login-MyBB-1.8) [(Message)](https://forums.alliedmods.net/showpost.php?p=2728065&postcount=21)
 
 
 ToDo:
