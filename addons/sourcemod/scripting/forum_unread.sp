@@ -161,12 +161,12 @@ void PostUnreadStuff(int client)
 	char sURL[64];
 	g_cHomepage.GetString(sURL, sizeof(sURL));
 
-	if (g_cAlerts.BoolValue && g_iAlerts[client] > -1)
+	if (g_cAlerts.BoolValue && g_iAlerts[client] > 0)
 	{
 		CPrintToChat(client, "You've %d unread alerts on %s", g_iAlerts[client], sURL);
 	}
 
-	if (g_cConversations.BoolValue && g_iConversations[client] > -1)
+	if (g_cConversations.BoolValue && g_iConversations[client] > 0)
 	{
 		CPrintToChat(client, "You've %d unread conversations on %s", g_iConversations[client], sURL);
 	}
