@@ -219,6 +219,30 @@ bool LoadGroups(bool reloadPlayers = false)
 			Forum_LogMessage("Admins", "(LoadGroups) SectionName: %s", sGroupID);
 		}
 
+		kvConfig.GetString("group", sName, sizeof(sName), "");
+
+		if (strlen(sName) > 1)
+		{
+			gGroup = FindAdmGroup(sName);
+
+			if (gGroup != INVALID_GROUP_ID)
+			{
+				g_smGroupIndex.SetValue(sGroupID, gGroup);
+
+				if (g_cDebug.BoolValue)
+				{
+					Forum_LogMessage("Admins", "(LoadGroups) Admin Group \"%s\" (%d) found.", sName, gGroup);
+				}
+
+				continue;
+			}
+
+			if (g_cDebug.BoolValue)
+			{
+				Forum_LogMessage("Admins", "(LoadGroups) Admin Group \"%s\" not found.");
+			}
+		}
+
 		if(!g_smGroupIndex.GetValue(sGroupID, gGroup))
 		{
 			if (!smGroups.GetString(sGroupID, sName, sizeof(sName)))
