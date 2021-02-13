@@ -25,9 +25,9 @@ jobs:
         with:
           version: ${{ matrix.SM_VERSION }}
 
-      - name: Compiling games
+      - name: Compiling plugins
         run: |
-          for file in forum_*.sp
+          for file in *.sp
           do
             echo -e "\nCompiling $file..."
             spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include $file
