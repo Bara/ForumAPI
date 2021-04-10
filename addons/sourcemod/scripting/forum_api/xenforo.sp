@@ -379,14 +379,16 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
         
         if (results.FetchRow())
         {
+            char sValue[128];
+
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (XenForo_UserFields) Error retrieving user fields: (Field is null)");
-                return;
+                LogMessage("[Forum-API] (XenForo_UserFields) Can't retrieve user field %s. Error: Field is null", sKey);
             }
-
-            char sValue[128];
-            results.FetchString(0, sValue, sizeof(sValue));
+            else
+            {
+                results.FetchString(0, sValue, sizeof(sValue));
+            }
 
             if (strlen(sValue) > 1)
             {

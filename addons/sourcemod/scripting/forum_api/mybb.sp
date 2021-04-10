@@ -314,14 +314,16 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
         
         if (results.FetchRow())
         {
+            char sValue[128];
+
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (MyBB_UserFields) Error retrieving user fields: (Field is null)");
-                return;
+                LogMessage("[Forum-API] (MyBB_UserFields) Can't retrieve user field %s. Error: Field is null", sColumn);
             }
-
-            char sValue[128];
-            results.FetchString(0, sValue, sizeof(sValue));
+            else
+            {
+                results.FetchString(0, sValue, sizeof(sValue));
+            }
 
             if (strlen(sValue) > 1)
             {
