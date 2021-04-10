@@ -295,6 +295,8 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
 
         char sColumn[32];
         pack.ReadString(sColumn, sizeof(sColumn));
+
+        delete pack;
         
         if (!IsClientValid(client))
         {

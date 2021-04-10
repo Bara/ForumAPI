@@ -360,6 +360,8 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
 
         char sKey[32];
         pack.ReadString(sKey, sizeof(sKey));
+
+        delete pack;
         
         if (!IsClientValid(client))
         {

@@ -381,6 +381,8 @@ public void Invision_UserFields(Database db, DBResultSet results, const char[] e
 
         char sKey[32];
         pack.ReadString(sKey, sizeof(sKey));
+
+        delete pack;
         
         if (!IsClientValid(client))
         {
