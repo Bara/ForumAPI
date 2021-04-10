@@ -10,15 +10,14 @@ jobs:
       matrix:
         SM_VERSION: ["1.10", "1.11"]
 
-
     steps:
       - uses: actions/checkout@v2
 
       - name: Set environment variables
         run: |
           SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
-          echo "name=SOURCEMOD_PATH=$SOURCEMOD_PATH" >> $GITHUB_ENV
-          echo "name=SCRIPTS_PATH=$SOURCEMOD_PATH/scripting" >> $GITHUB_ENV
+          echo "SOURCEMOD_PATH=$SOURCEMOD_PATH" >> $GITHUB_ENV
+          echo "SCRIPTING_PATH=$SOURCEMOD_PATH/scripting" >> $GITHUB_ENV
 
       - name: Setup SourcePawn Compiler ${{ matrix.SM_VERSION }}
         uses: rumblefrog/setup-sp@master
@@ -30,6 +29,6 @@ jobs:
           for file in *.sp
           do
             echo -e "\nCompiling $file..."
-            spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include $file
+            spcomp -E -w234 -O2 -v2 -i $SCRIPTING_PATH/include $file
           done
-        working-directory: ${{ env.SCRIPTS_PATH }}/
+        working-directory: ${{ env.SCRIPTING_PATH }}/
