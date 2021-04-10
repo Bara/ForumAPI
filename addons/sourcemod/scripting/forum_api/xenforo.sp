@@ -214,7 +214,7 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (XenForo_GetUserId) Error retrieving User Data: (Field is null)");
+                LogError("[Forum-API] (XenForo_GetUserId) Error retrieving User ID. Error: Field is null");
                 return;
             }
             

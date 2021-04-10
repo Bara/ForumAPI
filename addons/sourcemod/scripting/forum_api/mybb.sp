@@ -146,7 +146,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (MyBB_GetUserId) Error retrieving User Data: (Field is null)");
+                LogError("[Forum-API] (MyBB_GetUserId) Error retrieving User ID. Error: Field is null");
                 return;
             }
             
