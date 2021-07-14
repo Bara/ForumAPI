@@ -134,9 +134,9 @@ public Action Timer_GetAllClientCredits(Handle timer)
 
 public void OnConfigsExecuted()
 {
-	g_cTable.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cTable.GetString(g_sTable, sizeof(g_sTable));
 	g_cColumn.GetString(g_sColumn, sizeof(g_sColumn));
-	g_cUserColumn.GetString(g_sColumn, sizeof(g_sColumn));
+	g_cUserColumn.GetString(g_sUserColumn, sizeof(g_sUserColumn));
 	
 	if (Forum_IsConnected())
 	{
