@@ -269,7 +269,7 @@ public void Flarum_UserInformations(Database db, DBResultSet results, const char
 
             g_aSecondaryGroups[client].Push(iGroup);
 
-            results.FetchString(3, g_sCustomTitle[client], sizeof(g_sCustomTitle[]));
+            Format(g_sCustomTitle[client], sizeof(g_sCustomTitle[]), "N/A");
             
             Call_StartForward(g_hOnInfoProcessed);
             Call_PushCell(client);
