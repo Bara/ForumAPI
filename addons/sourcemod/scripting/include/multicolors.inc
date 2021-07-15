@@ -25,12 +25,12 @@
 
 
 /* Global var to check whether colors are fixed or not */
-bool g_bCFixColors = false;
+static bool g_bCFixColors = false;
 
 #define PREFIX_MAX_LENGTH 64
 #define PREFIX_SEPARATOR "{default} "
 
-char g_sPrefix[PREFIX_MAX_LENGTH] = "";
+static char g_sPrefix[PREFIX_MAX_LENGTH] = "";
 
 /**
  * Add a chat prefix before all chat msg

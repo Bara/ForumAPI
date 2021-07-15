@@ -8,6 +8,7 @@
 
 ConVar g_cForum = null;
 ConVar g_cDebug = null;
+ConVar g_cPrefix = null;
 
 Database g_dDatabase = null;
 
@@ -27,6 +28,7 @@ bool g_bGroups = false;
 bool g_bFields = false;
 
 char g_sLog[PLATFORM_MAX_PATH + 1];
+char g_sPrefix[64];
 
 int g_iPrimaryGroup[MAXPLAYERS + 1] = { -1, ... };
 int g_iFieldCount[MAXPLAYERS + 1] = { -1, ... };
@@ -45,6 +47,7 @@ char g_sCustomTitle[MAXPLAYERS + 1][64];
 #include "forum_api/xenforo.sp"
 #include "forum_api/invision.sp"
 #include "forum_api/mybb.sp"
+#include "forum_api/flarum.sp"
 
 public Plugin myinfo = 
 {
@@ -93,10 +96,13 @@ public void OnPluginStart()
     AutoExecConfig_SetCreateDirectory(true);
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("forum_api");
-    g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision, 3 - MyBB)", _, true, 0.0, true, 3.0);
+    g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision, 3 - MyBB, 4 - Flarum)", _, true, 0.0, true, 4.0);
     g_cDebug = AutoExecConfig_CreateConVar("forum_api_debug", "0", "Enable the debug mode? This will print every sql querie into the log file.", _, true, 0.0, true, 1.0);
+    g_cPrefix = AutoExecConfig_CreateConVar("forum_api_prefix", "", "Set your prefix or leave it blank if no prefix was set.");
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
+
+    g_cPrefix.AddChangeHook(CVar_OnChange);
 
     RegConsoleCmd("sm_forumid", Command_ForumID);
 
@@ -133,6 +139,8 @@ public void OnConfigsExecuted()
 {
     if (g_cForum.IntValue > 0)
     {
+        g_cPrefix.GetString(g_sPrefix, sizeof(g_sPrefix));
+        
         if (SQL_CheckConfig("forum"))
         {
             Database.Connect(OnSQLConnect, "forum");
@@ -147,6 +155,14 @@ public void OnConfigsExecuted()
     {
         SetFailState("forum_api_software is 0. Please choose your forum software and update forum_api_software.");
         return;
+    }
+}
+
+public void CVar_OnChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+    if (convar == g_cPrefix)
+    {
+        strcopy(g_sPrefix, sizeof(g_sPrefix), newValue);
     }
 }
 
@@ -184,6 +200,10 @@ public void OnSQLConnect(Database db, const char[] error, any data)
     else if (g_cForum.IntValue == 3)
     {
         MyBB_LoadGroups();
+    }
+    else if (g_cForum.IntValue == 4)
+    {
+        Flarum_LoadGroups();
     }
     else
     {
@@ -263,6 +283,10 @@ public void OnClientPostAdminCheck(int client)
     else if (g_cForum.IntValue == 3)
     {
         MyBB_LoadClient(client, sCommunityID);
+    }
+    else if (g_cForum.IntValue == 4)
+    {
+        Flarum_LoadClient(client, sCommunityID);
     }
 }
 

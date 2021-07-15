@@ -56,7 +56,7 @@ public void OnMapStart()
 
 public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
 {
-	SetAdmin(client);
+	SetAdmin(client, primarygroup, secondarygroups);
 }
 
 public void OnRebuildAdminCache(AdminCachePart part)
@@ -93,10 +93,11 @@ void SetAllAdmin()
 	}
 }
 
-void SetAdmin(int client)
+void SetAdmin(int client, int primarygroup = -1, ArrayList secondarygroups = null)
 {
-	if (!g_bLoaded)
+	if (!g_bLoaded || (primarygroup == -1 && secondarygroups == null))
 	{
+		LogStackTrace("Hey");
 		LogError("[Forum-Admins] (SetAdmin) Admin groups not loaded!");
 		LateLoadAdminCall(client);
 		return;
@@ -120,7 +121,12 @@ void SetAdmin(int client)
 		}
 	}
 
-	int iForumGroup = Forum_GetClientPrimaryGroup(client);
+	int iForumGroup = primarygroup;
+
+	if (primarygroup == -1)
+	{
+		iForumGroup = Forum_GetClientPrimaryGroup(client);
+	}
 
 	char sForumGroup[12], sGName[32];
 	StringMap smGroup = Forum_GetGroupList();
@@ -138,7 +144,12 @@ void SetAdmin(int client)
 		}
 	}
 
-	ArrayList aSecondary = Forum_GetClientSecondaryGroups(client);
+	ArrayList aSecondary = secondarygroups;
+
+	if (aSecondary == null)
+	{
+		aSecondary = Forum_GetClientSecondaryGroups(client);
+	}
 
 	for (int i = 0; i < aSecondary.Length; i++)
 	{

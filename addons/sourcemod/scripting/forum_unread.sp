@@ -56,6 +56,12 @@ public void Forum_OnConnected()
 
 	g_cDebug = FindConVar("forum_api_debug");
 	g_cForum = FindConVar("forum_api_software");
+
+	if (g_cForum != null && g_cForum.IntValue == 4)
+	{
+		SetFailState("Flarum doesn't contains the function of private messages. Please remove/disable \"forum_unread.sm\"");
+		return;
+	}
 }
 
 public void OnClientPutInServer(int client)
