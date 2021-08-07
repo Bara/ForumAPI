@@ -153,7 +153,11 @@ public void XenForo_FieldsPhrase(Database db, DBResultSet results, const char[] 
 
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (XenForo_FieldsPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(XenForo_FieldsPhrase) Error retrieving user_field phrase (%s): (Field is null)", sField);
+                }
+
                 return;
             }
 
@@ -201,7 +205,11 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (XenForo_GetUserId) Error grabbing User Data: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_GetUserId) Error grabbing User Data: Client invalid");
+            }
+
             return;
         }
         
@@ -214,7 +222,11 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (XenForo_GetUserId) Error retrieving User ID. Error: Field is null");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(XenForo_GetUserId) Error retrieving User ID. Error: Field is null");
+                }
+
                 return;
             }
             
@@ -270,7 +282,10 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
         }
         else
         {
-            LogError("[Forum-API] (XenForo_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -288,7 +303,11 @@ public void XenForo_UserInformations(Database db, DBResultSet results, const cha
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (XenForo_UserInformations) Error grabbing User informations: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_UserInformations) Error grabbing User informations: Client invalid");
+            }
+
             return;
         }
         
@@ -301,7 +320,11 @@ public void XenForo_UserInformations(Database db, DBResultSet results, const cha
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (XenForo_UserInformations) Error retrieving User informations: (Field is null)");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(XenForo_UserInformations) Error retrieving User informations: (Field is null)");
+                }
+                
                 return;
             }
 
@@ -339,7 +362,10 @@ public void XenForo_UserInformations(Database db, DBResultSet results, const cha
         }
         else
         {
-            LogError("[Forum-API] (XenForo_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -365,7 +391,11 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (XenForo_UserFields) Error grabbing user fields: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_UserFields) Error grabbing user fields: Client invalid");
+            }
+
             return;
         }
 
@@ -410,7 +440,10 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
         }
         else
         {
-            LogError("[Forum-API] (XenForo_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(XenForo_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            }
         }
     }
 }

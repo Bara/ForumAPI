@@ -218,7 +218,11 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Invision_GetUserId) Error grabbing User Data: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_GetUserId) Error grabbing User Data: Client invalid");
+            }
+
             return;
         }
         
@@ -231,7 +235,11 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (Invision_GetUserId) Error retrieving User ID. Error: Field is null");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(Invision_GetUserId) Error retrieving User ID. Error: Field is null");
+                }
+
                 return;
             }
             
@@ -291,7 +299,10 @@ public void Invision_GetUserId(Database db, DBResultSet results, const char[] er
         }
         else
         {
-            LogError("[Forum-API] (Invision_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -309,7 +320,11 @@ public void Invision_UserInformations(Database db, DBResultSet results, const ch
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Invision_UserInformations) Error grabbing User informations: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_UserInformations) Error grabbing User informations: Client invalid");
+            }
+
             return;
         }
         
@@ -322,7 +337,11 @@ public void Invision_UserInformations(Database db, DBResultSet results, const ch
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (Invision_UserInformations) Error retrieving User informations: (Field is null)");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(Invision_UserInformations) Error retrieving User informations: (Field is null)");
+                }
+
                 return;
             }
 
@@ -360,7 +379,10 @@ public void Invision_UserInformations(Database db, DBResultSet results, const ch
         }
         else
         {
-            LogError("[Forum-API] (Invision_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -386,7 +408,11 @@ public void Invision_UserFields(Database db, DBResultSet results, const char[] e
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Invision_UserFields) Error grabbing user fields: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_UserFields) Error grabbing user fields: Client invalid");
+            }
+            
             return;
         }
 
@@ -431,7 +457,10 @@ public void Invision_UserFields(Database db, DBResultSet results, const char[] e
         }
         else
         {
-            LogError("[Forum-API] (Invision_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Invision_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            }
         }
     }
 }

@@ -133,7 +133,11 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (MyBB_GetUserId) Error grabbing User Data: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_GetUserId) Error grabbing User Data: Client invalid");
+            }
+            
             return;
         }
         
@@ -146,7 +150,11 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (MyBB_GetUserId) Error retrieving User ID. Error: Field is null");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(MyBB_GetUserId) Error retrieving User ID. Error: Field is null");
+                }
+
                 return;
             }
             
@@ -205,7 +213,10 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
         }
         else
         {
-            LogError("[Forum-API] (MyBB_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -223,7 +234,11 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (MyBB_UserInformations) Error grabbing User informations: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_UserInformations) Error grabbing User informations: Client invalid");
+            }
+
             return;
         }
         
@@ -236,7 +251,11 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (MyBB_UserInformations) Error retrieving User informations: (Field is null)");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(MyBB_UserInformations) Error retrieving User informations: (Field is null)");
+                }
+
                 return;
             }
 
@@ -274,7 +293,10 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
         }
         else
         {
-            LogError("[Forum-API] (MyBB_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_UserInformations) Error retrieving User (\"%L\") informations: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -300,7 +322,11 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (MyBB_UserFields) Error grabbing user fields: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_UserFields) Error grabbing user fields: Client invalid");
+            }
+
             return;
         }
 
@@ -345,7 +371,10 @@ public void MyBB_UserFields(Database db, DBResultSet results, const char[] error
         }
         else
         {
-            LogError("[Forum-API] (MyBB_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(MyBB_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            }
         }
     }
 }

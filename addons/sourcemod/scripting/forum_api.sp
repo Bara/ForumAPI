@@ -369,15 +369,14 @@ public int Native_TExecute(Handle plugin, int numParams)
     
     DBPriority prio = GetNativeCell(2);
     
-    g_dDatabase.Query(SQL_EmptyCallback, sQuery, 0, prio);
-    LogError("[Forum-API] (Native_TExecute) SQL QUERY: Forum_TExecute - Query: '%s'", sQuery);
+    g_dDatabase.Query(SQL_EmptyCallback, sQuery, _, prio);
 }
 
 public int SQL_EmptyCallback(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null)
     {
-        LogError("[Forum-API] (SQL_EmptyCallback) Query error by void: '%s'", error);
+        LogError("[Forum-API] (SQL_EmptyCallback) Query error: %s", error);
         return;
     }
 }

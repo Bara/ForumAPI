@@ -14,7 +14,7 @@ public int Flarum_GetForumGroups(Database db, DBResultSet results, const char[] 
 {
     if (db == null || strlen(error) > 0)
     {
-        LogError("[Forum-API] (Flarum_GetForumGroups) Query error by void: '%s'", error);
+        Forum_LogMessage("API", "(Flarum_GetForumGroups) Query error by void: '%s'", error);
         return;
     }
     else
@@ -148,7 +148,11 @@ public void Flarum_GetUserId(Database db, DBResultSet results, const char[] erro
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Flarum_GetUserId) Error grabbing User Data: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Flarum_GetUserId) Error grabbing User Data: Client invalid");
+            }
+
             return;
         }
         
@@ -161,7 +165,11 @@ public void Flarum_GetUserId(Database db, DBResultSet results, const char[] erro
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (Flarum_GetUserId) Error retrieving User ID. Error: Field is null");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(Flarum_GetUserId) Error retrieving User ID. Error: Field is null");
+                }
+                
                 return;
             }
             
@@ -217,7 +225,10 @@ public void Flarum_GetUserId(Database db, DBResultSet results, const char[] erro
         }
         else
         {
-            LogError("[Forum-API] (Flarum_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Flarum_GetUserId) Error retrieving User (\"%L\") Data: (Row not fetched)", client);
+            }
         }
     }
 }
@@ -235,7 +246,11 @@ public void Flarum_UserInformations(Database db, DBResultSet results, const char
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Flarum_UserInformations) Error grabbing User informations: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Flarum_UserInformations) Error grabbing User informations: Client invalid");
+            }
+
             return;
         }
         
@@ -250,7 +265,11 @@ public void Flarum_UserInformations(Database db, DBResultSet results, const char
         {
             if (results.IsFieldNull(0))
             {
-                LogError("[Forum-API] (Flarum_UserInformations) Error retrieving User informations: (Field is null)");
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(Flarum_UserInformations) Error retrieving User informations: (Field is null)");
+                }
+
                 return;
             }
 
@@ -307,7 +326,11 @@ public void Flarum_UserFields(Database db, DBResultSet results, const char[] err
         
         if (!IsClientValid(client))
         {
-            LogError("[Forum-API] (Flarum_UserFields) Error grabbing user fields: Client invalid");
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Flarum_UserFields) Error grabbing user fields: Client invalid");
+            }
+
             return;
         }
 
@@ -352,7 +375,10 @@ public void Flarum_UserFields(Database db, DBResultSet results, const char[] err
         }
         else
         {
-            LogError("[Forum-API] (Flarum_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            if (g_cDebug.BoolValue)
+            {
+                Forum_LogMessage("API", "(Flarum_UserFields) Error retrieving User (\"%L\") fields: (Row not fetched)", client);
+            }
         }
     }
 }
