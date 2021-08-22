@@ -72,7 +72,7 @@ void Flarum_LoadUserFields()
     }
 }
 
-public void Flarum_Fields(Database db, DBResultSet results, const char[] error, int userid)
+public void Flarum_Fields(Database db, DBResultSet results, const char[] error, any data)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -135,7 +135,7 @@ void Flarum_LoadClient(int client, const char[] sCommunityID)
     }
 }
 
-public void Flarum_GetUserId(Database db, DBResultSet results, const char[] error, int userid)
+public void Flarum_GetUserId(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -233,7 +233,7 @@ public void Flarum_GetUserId(Database db, DBResultSet results, const char[] erro
     }
 }
 
-public void Flarum_UserInformations(Database db, DBResultSet results, const char[] error, int userid)
+public void Flarum_UserInformations(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -305,24 +305,24 @@ public void Flarum_UserInformations(Database db, DBResultSet results, const char
     }
 }
 
-public void Flarum_UserFields(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void Flarum_UserFields(Database db, DBResultSet results, const char[] error, any pack)
 {
     if(db == null || strlen(error) > 0)
     {
         SetFailState("[Forum-API] (Flarum_UserFields) Fail at Query: %s", error);
-        delete pack;
+        delete view_as<DataPack>(pack);
         return;
     }
     else
     {
-        pack.Reset();
+        view_as<DataPack>(pack).Reset();
 
-        int client = GetClientOfUserId(pack.ReadCell());
+        int client = GetClientOfUserId(view_as<DataPack>(pack).ReadCell());
 
         char sKey[32];
-        pack.ReadString(sKey, sizeof(sKey));
+        view_as<DataPack>(pack).ReadString(sKey, sizeof(sKey));
 
-        delete pack;
+        delete view_as<DataPack>(pack);
         
         if (!IsClientValid(client))
         {

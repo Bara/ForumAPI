@@ -80,7 +80,7 @@ public void Forum_OnInfoProcessed(int client, const char[] name, int primarygrou
 	CreateTimer(g_cInterval.FloatValue * 60.0, Timer_UpdateUnreadCount, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action Timer_UpdateUnreadCount(Handle timer, int userid)
+public Action Timer_UpdateUnreadCount(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 

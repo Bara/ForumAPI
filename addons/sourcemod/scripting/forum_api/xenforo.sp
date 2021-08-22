@@ -75,7 +75,7 @@ void XenForo_LoadUserFields()
     }
 }
 
-public void XenForo_Fields(Database db, DBResultSet results, const char[] error, int userid)
+public void XenForo_Fields(Database db, DBResultSet results, const char[] error, any data)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -125,22 +125,22 @@ public void XenForo_Fields(Database db, DBResultSet results, const char[] error,
     }
 }
 
-public void XenForo_FieldsPhrase(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void XenForo_FieldsPhrase(Database db, DBResultSet results, const char[] error, any pack)
 {
     if(db == null || strlen(error) > 0)
     {
         SetFailState("[Forum-API] (XenForo_FieldsPhrase) Fail at Query: %s", error);
-        delete pack;
+        delete view_as<DataPack>(pack);
         return;
     }
     else
     {
-        pack.Reset();
+        view_as<DataPack>(pack).Reset();
 
         char sField[32];
-        pack.ReadString(sField, sizeof(sField));
+        view_as<DataPack>(pack).ReadString(sField, sizeof(sField));
 
-        delete pack;
+        delete view_as<DataPack>(pack);
 
         if (g_cDebug.BoolValue)
         {
@@ -192,7 +192,7 @@ void XenForo_LoadClient(int client, const char[] sCommunityID)
     }
 }
 
-public void XenForo_GetUserId(Database db, DBResultSet results, const char[] error, int userid)
+public void XenForo_GetUserId(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -290,7 +290,7 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
     }
 }
 
-public void XenForo_UserInformations(Database db, DBResultSet results, const char[] error, int userid)
+public void XenForo_UserInformations(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -370,24 +370,24 @@ public void XenForo_UserInformations(Database db, DBResultSet results, const cha
     }
 }
 
-public void XenForo_UserFields(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void XenForo_UserFields(Database db, DBResultSet results, const char[] error, any pack)
 {
     if(db == null || strlen(error) > 0)
     {
         SetFailState("[Forum-API] (XenForo_UserFields) Fail at Query: %s", error);
-        delete pack;
+        delete view_as<DataPack>(pack);
         return;
     }
     else
     {
-        pack.Reset();
+        view_as<DataPack>(pack).Reset();
 
-        int client = GetClientOfUserId(pack.ReadCell());
+        int client = GetClientOfUserId(view_as<DataPack>(pack).ReadCell());
 
         char sKey[32];
-        pack.ReadString(sKey, sizeof(sKey));
+        view_as<DataPack>(pack).ReadString(sKey, sizeof(sKey));
 
-        delete pack;
+        delete view_as<DataPack>(pack);
         
         if (!IsClientValid(client))
         {

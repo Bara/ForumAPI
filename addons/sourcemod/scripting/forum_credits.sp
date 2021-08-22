@@ -288,27 +288,27 @@ public int Native_RemoveClientCredits(Handle plugin, int numParams)
 	return true;
 }
 
-public void SQL_UpdateCredits(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void SQL_UpdateCredits(Database db, DBResultSet results, const char[] error, any pack)
 {
 	if(db == null || strlen(error) > 0)
 	{
 		SetFailState("[Forum-Credits] (SQL_UpdateCredits) Fail at Query: %s", error);
-		delete pack;
+		delete view_as<DataPack>(pack);
 		return;
 	}
 	else
 	{
-		pack.Reset();
-		int client = GetClientOfUserId(pack.ReadCell());
+		view_as<DataPack>(pack).Reset();
+		int client = GetClientOfUserId(view_as<DataPack>(pack).ReadCell());
 
 		if (!IsClientValid(client))
 		{
-			delete pack;
+			delete view_as<DataPack>(pack);
 			return;
 		}
 
-		bool bAdd = view_as<bool>(pack.ReadCell());
-		int credits = pack.ReadCell();
+		bool bAdd = view_as<bool>(view_as<DataPack>(pack).ReadCell());
+		int credits = view_as<DataPack>(pack).ReadCell();
 
 		if (bAdd)
 		{
@@ -327,7 +327,7 @@ public void SQL_UpdateCredits(Database db, DBResultSet results, const char[] err
 		Call_Finish();
 	}
 
-	delete pack;
+	delete view_as<DataPack>(pack);
 }
 
 stock bool IsClientValid(int client, bool bots = false)

@@ -75,7 +75,7 @@ void MyBB_LoadUserFields()
     }
 }
 
-public void MyBB_Fields(Database db, DBResultSet results, const char[] error, int userid)
+public void MyBB_Fields(Database db, DBResultSet results, const char[] error, any data)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -120,7 +120,7 @@ void MyBB_LoadClient(int client, const char[] sCommunityID)
     }
 }
 
-public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error, int userid)
+public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -221,7 +221,7 @@ public void MyBB_GetUserId(Database db, DBResultSet results, const char[] error,
     }
 }
 
-public void MyBB_UserInformations(Database db, DBResultSet results, const char[] error, int userid)
+public void MyBB_UserInformations(Database db, DBResultSet results, const char[] error, any userid)
 {
     if(db == null || strlen(error) > 0)
     {
@@ -301,24 +301,24 @@ public void MyBB_UserInformations(Database db, DBResultSet results, const char[]
     }
 }
 
-public void MyBB_UserFields(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void MyBB_UserFields(Database db, DBResultSet results, const char[] error, any pack)
 {
     if(db == null || strlen(error) > 0)
     {
         SetFailState("[Forum-API] (MyBB_UserFields) Fail at Query: %s", error);
-        delete pack;
+        delete view_as<DataPack>(pack);
         return;
     }
     else
     {
-        pack.Reset();
+        view_as<DataPack>(pack).Reset();
 
-        int client = GetClientOfUserId(pack.ReadCell());
+        int client = GetClientOfUserId(view_as<DataPack>(pack).ReadCell());
 
         char sColumn[32];
-        pack.ReadString(sColumn, sizeof(sColumn));
+        view_as<DataPack>(pack).ReadString(sColumn, sizeof(sColumn));
 
-        delete pack;
+        delete view_as<DataPack>(pack);
         
         if (!IsClientValid(client))
         {
