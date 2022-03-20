@@ -140,8 +140,13 @@ public void OnConfigsExecuted()
     if (g_cForum.IntValue > 0)
     {
         g_cPrefix.GetString(g_sPrefix, sizeof(g_sPrefix));
-        
-        if (g_dDatabase == null && SQL_CheckConfig("forum"))
+
+        if (g_dDatabase != null)
+        {
+            return;
+        }
+
+        if (SQL_CheckConfig("forum"))
         {
             Database.Connect(OnSQLConnect, "forum");
         }
