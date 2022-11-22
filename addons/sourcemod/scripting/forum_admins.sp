@@ -179,6 +179,8 @@ void LateLoadAdminCall(int client)
 public Action Command_ReloadGroups(int client, int args)
 {
 	LoadGroups(true);
+
+	return Plugin_Continue;
 }
 
 bool LoadGroups(bool reloadPlayers = false)

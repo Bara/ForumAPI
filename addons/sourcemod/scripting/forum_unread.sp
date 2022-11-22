@@ -93,6 +93,8 @@ public Action Timer_UpdateUnreadCount(Handle timer, any userid)
 	
 		UpdateUnreadCount(client);
 	}
+
+	return Plugin_Continue;
 }
 
 void UpdateUnreadCount(int client)

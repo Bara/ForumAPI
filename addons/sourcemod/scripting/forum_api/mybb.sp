@@ -10,7 +10,7 @@ void MyBB_LoadGroups()
     }
 }
 
-public int MyBB_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
+public void MyBB_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {

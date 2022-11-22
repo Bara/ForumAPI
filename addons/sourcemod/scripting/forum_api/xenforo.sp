@@ -10,7 +10,7 @@ void XenForo_LoadGroups()
     }
 }
 
-public int XenForo_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
+public void XenForo_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {

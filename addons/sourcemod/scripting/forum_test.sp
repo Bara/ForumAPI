@@ -148,4 +148,6 @@ public Action Command_ForumTest(int client, int args)
     }
 
     delete smSnapshot;
+
+    return Plugin_Continue;
 }

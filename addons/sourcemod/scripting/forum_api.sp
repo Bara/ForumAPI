@@ -375,9 +375,11 @@ public int Native_TExecute(Handle plugin, int numParams)
     DBPriority prio = GetNativeCell(2);
     
     g_dDatabase.Query(SQL_EmptyCallback, sQuery, _, prio);
+
+    return 0;
 }
 
-public int SQL_EmptyCallback(Database db, DBResultSet results, const char[] error, any data)
+public void SQL_EmptyCallback(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null)
     {
@@ -464,6 +466,8 @@ public int Native_LogMessage(Handle plugin, int numParams)
     FormatNativeString(0, 2, 3, sizeof(sMessage), iBytes, sMessage);
 
     LogToFileEx(g_sLog, "[%s] %s", sPlugin, sMessage);
+
+    return 0;
 }
 
 public int Native_IsLoaded(Handle plugin, int numParams)

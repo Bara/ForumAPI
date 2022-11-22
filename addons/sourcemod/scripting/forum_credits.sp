@@ -130,6 +130,8 @@ public Action Timer_GetAllClientCredits(Handle timer)
 			}
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 public void OnConfigsExecuted()

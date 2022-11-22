@@ -10,7 +10,7 @@ void Flarum_LoadGroups()
     }
 }
 
-public int Flarum_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
+public void Flarum_GetForumGroups(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {

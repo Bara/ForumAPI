@@ -10,7 +10,7 @@ void Invision_LoadGroups()
     }
 }
 
-public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] error, any data)
+public void Invision_GetGroupIDs(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {
@@ -55,7 +55,7 @@ public int Invision_GetGroupIDs(Database db, DBResultSet results, const char[] e
 }
 
 
-public int Invision_GetGroupNames(Database db, DBResultSet results, const char[] error, any groupid)
+public void Invision_GetGroupNames(Database db, DBResultSet results, const char[] error, any groupid)
 {
     if (db == null || strlen(error) > 0)
     {
@@ -114,7 +114,7 @@ void Invision_LoadUserFields()
     }
 }
 
-public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char[] error, any data)
+public void Invision_GetUserFieldIDs(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {
@@ -154,7 +154,7 @@ public int Invision_GetUserFieldIDs(Database db, DBResultSet results, const char
 }
 
 
-public int Invision_GetUserFieldNames(Database db, DBResultSet results, const char[] error, any data)
+public void Invision_GetUserFieldNames(Database db, DBResultSet results, const char[] error, any data)
 {
     if (db == null || strlen(error) > 0)
     {
