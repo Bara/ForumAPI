@@ -264,7 +264,10 @@ public void XenForo_GetUserId(Database db, DBResultSet results, const char[] err
             {
                 smFields.GetKey(i, sKey, sizeof(sKey));
 
-                Forum_LogMessage("API", "(XenForo_GetUserId) smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
+                if (g_cDebug.BoolValue)
+                {
+                    Forum_LogMessage("API", "(XenForo_GetUserId) smFields.Length: %d, g_smFields.Size: %d", smFields.Length, g_smFields.Size);
+                }
 
                 Format(sQuery, sizeof(sQuery), "SELECT field_value FROM xf_user_field_value WHERE user_id = '%d' AND field_id = \"%s\"", g_iUserID[client], sKey);
                 DataPack pack = new DataPack();
@@ -400,10 +403,10 @@ public void XenForo_UserFields(Database db, DBResultSet results, const char[] er
         }
 
         g_iFieldCount[client]++;
-        Forum_LogMessage("API", "(XenForo_UserFields) Field Count: %d", g_iFieldCount[client]);
-
+        
         if (g_cDebug.BoolValue)
         {
+            Forum_LogMessage("API", "(XenForo_UserFields) Field Count: %d", g_iFieldCount[client]);
             Forum_LogMessage("API", "(XenForo_UserFields) Retrieving user field %s for %N...", sKey, client);
         }
         

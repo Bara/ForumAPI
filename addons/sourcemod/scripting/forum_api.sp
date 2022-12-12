@@ -93,7 +93,6 @@ public void OnPluginStart()
 {
     LoadTranslations("common.phrases");
     
-    AutoExecConfig_SetCreateDirectory(true);
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("forum_api");
     g_cForum = AutoExecConfig_CreateConVar("forum_api_software", "0", "Which forum software do you run? (0 - Disabled, 1 - XenForo, 2 - Invision, 3 - MyBB, 4 - Flarum)", _, true, 0.0, true, 4.0);

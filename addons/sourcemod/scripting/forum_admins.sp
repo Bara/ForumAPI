@@ -32,7 +32,6 @@ public void OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	
-	AutoExecConfig_SetCreateDirectory(true);
 	AutoExecConfig_SetCreateFile(true);
 	AutoExecConfig_SetFile("forum_admins");
 	g_cDebug = AutoExecConfig_CreateConVar("forum_admins_debug", "0", "Enable debug mode?", _, true, 0.0, true, 1.0);
@@ -41,17 +40,30 @@ public void OnPluginStart()
 
 	CSetPrefix("{darkblue}[Forum]{default}");
 
-	RegAdminCmd("sm_reloadgroups", Command_ReloadGroups, ADMFLAG_CONFIG);
-}
-
-public void OnConfigsExecuted()
-{
-	g_bLoaded = LoadGroups(true);
+	RegAdminCmd("sm_reloadgroupsp", Command_ReloadGroups, ADMFLAG_CONFIG);
 }
 
 public void OnMapStart()
 {
+	g_bLoaded = false;
+
 	SetAllAdmin();
+}
+
+public void OnConfigsExecuted()
+{
+	if (!g_bLoaded)
+	{
+		g_bLoaded = LoadGroups(true);
+	}
+}
+
+public void Forum_OnConnected()
+{
+	if (!g_bLoaded)
+	{
+		g_bLoaded = LoadGroups(true);
+	}
 }
 
 public void Forum_OnInfoProcessed(int client, const char[] name, int primarygroup, ArrayList secondarygroups)
@@ -97,8 +109,7 @@ void SetAdmin(int client, int primarygroup = -1, ArrayList secondarygroups = nul
 {
 	if (!g_bLoaded || (primarygroup == -1 && secondarygroups == null))
 	{
-		LogStackTrace("Hey");
-		LogError("[Forum-Admins] (SetAdmin) Admin groups not loaded!");
+		LogError("[Forum-Admins] (SetAdmin) Admin groups not loaded! Loaded: %d, primrary: %d, secondary: %d", g_bLoaded, primarygroup, secondarygroups);
 		LateLoadAdminCall(client);
 		return;
 	}
@@ -187,6 +198,7 @@ bool LoadGroups(bool reloadPlayers = false)
 {
 	if (!Forum_IsConnected())
 	{
+		LogError("[Forum-Admins] (LoadGroups) Forum is not connected...");
 		return false;
 	}
 
@@ -252,7 +264,7 @@ bool LoadGroups(bool reloadPlayers = false)
 
 			if (g_cDebug.BoolValue)
 			{
-				Forum_LogMessage("Admins", "(LoadGroups) Admin Group \"%s\" not found.");
+				Forum_LogMessage("Admins", "(LoadGroups) Admin Group \"%s\" not found.", sName);
 			}
 		}
 
